@@ -1,0 +1,11 @@
+{
+  "inline_script_blocks": 1,
+  "inline_style_blocks": 1,
+  "linked_assets": [
+    "#pane-left",
+    "#pane-right"
+  ],
+  "javascript_syntax": "PASS",
+  "external_http_requests_detected": false,
+  "html_sha256": "49713ea407e389988120864dfa58cc5a23aca17d7ad7b7aef7265ba034aae103"
+}
