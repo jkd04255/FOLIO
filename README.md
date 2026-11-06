@@ -1,2 +1,33 @@
-# FOLIO
-FOLIO — tablet-first AI study workspace (prototype only)
+# FOLIO — Dark Workspace v1.2 (정적 시안)
+
+아이패드·갤럭시탭을 우선으로 설계한 태블릿 학습 앱 FOLIO의 **비공개 디자인 프로토타입**입니다.
+
+## 포함 파일
+
+- `index.html` — 다크모드 CSS·JavaScript가 포함된 단일 HTML 시안
+- `VERIFICATION.json` — 업로드 전 구문·구성 검사 기록
+- `.nojekyll` — 향후 별도 승인을 받았을 때만 활용할 수 있는 정적 호스팅 호환 파일
+
+## 시안 기능
+
+- 좌우 영역마다 PDF / AI 설명 / 확인문제 선택
+- 태블릿 가로 화면 전체 활용과 분할 비율 조절
+- 예시 문제·설명·PDF 내용은 합성 데이터
+- 선택한 PDF는 브라우저 내부에서만 처리하며 외부 서버로 전송하지 않음
+- **Supabase 인증, 데이터베이스, AI·STT API, 과금 기능 없음**
+
+## 로컬에서 확인
+
+`index.html`을 브라우저로 열거나, 저장소를 내려받은 후 다음과 같이 실행합니다.
+
+```bash
+python -m http.server 8000
+```
+
+브라우저에서 http://localhost:8000 접속.
+
+## 승인 범위 및 주의
+
+이 저장소는 **Private**이고 GitHub Pages는 **비활성화**된 상태입니다. 공개 배포, 실제 사용자 데이터 처리, 유료 API 연동은 승인되지 않았습니다.
+
+기존 GATE-W01/W02 PRD·개발 기준선과 W03-02 로컬 보안 구현은 이번 정적 시안 업로드로 변경되지 않습니다.
