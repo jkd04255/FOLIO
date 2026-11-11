@@ -1,5 +1,10 @@
 # FOLIO — 프로젝트 인수인계서
 
+> **2026-11-11 최신 갱신 (이하 과거 스냅샷보다 우선):** 디자인 지침 Draft PR #1은 **2026-11-11에 main으로 병합 완료**되었습니다. 확인한 기준 main은 `1d314fc33527ebf8c52e3ce1b7cc9e09fe317568`이며, `.agents/skills/human-web-design/SKILL.md`, `.agents/skills/frontend-design/SKILL.md`는 main에 존재합니다. 아래의 'PR #1 미병합' 기록은 당시 스냅샷이며 최신 상태가 아닙니다.  
+> **진행 중인 다음 변경:** `fix/w03-01-mobile-cross-pane-navigation-20261111`에서 W03-01 모바일 교차 패널 표시 문제를 소규모로 수정했습니다. 검증 및 미실행 항목은 `docs/W03-01_MOBILE_CROSS_PANE_QA.md` 참고. 이 브랜치는 main 병합/배포 허용을 뜻하지 않습니다.  
+> **절대 유지:** Dark Workspace v1.2, GATE-W01/W02 동결, GATE-W03 미승인, 실제 외부 연동·과금·공개 Pages 금지. GitHub Actions/실브라우저·실기기 QA는 별도 검증 전까지 PASS 주장 금지.
+
+
 > 기준일: 2026-11-11 (KST)  
 > 대상 저장소: [jkd04255/FOLIO](https://github.com/jkd04255/FOLIO) (**Private**)  
 > 용도: 다른 ChatGPT 프로젝트/대화에서 FOLIO 개발을 안전하게 재개하기 위한 단일 진입 문서  
