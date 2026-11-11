@@ -172,5 +172,90 @@ class WorkspaceBrowserTests(unittest.TestCase):
         self.assert_clean(ext, errors)
 
 
+    def test_studio_v2_stylesheet_replaces_legacy_appearance(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        self.assertEqual(0, page.locator("head style").count())
+        self.assertEqual("styles/studio-v2.css", page.locator('link[rel="stylesheet"]').get_attribute("href"))
+        self.assertTrue(page.evaluate("""
+            () => [...document.styleSheets].some(s => (s.href || '').endsWith('/styles/studio-v2.css'))
+        """))
+        self.assertEqual("rgb(23, 41, 50)", page.locator(".session-bar").evaluate(
+            "(el) => getComputedStyle(el).backgroundColor"
+        ))
+        self.assertEqual("rgb(255, 255, 255)", page.locator(".study-shell").first.evaluate(
+            "(el) => getComputedStyle(el).backgroundColor"
+        ))
+        self.assertEqual("FOLIO — Study Studio", page.title())
+        self.assert_clean(ext, errors)
+
+    def test_studio_responsive_workspace_without_document_overflow(self):
+        for width, height in ((320, 720), (390, 844), (670, 900),
+                              (768, 1024), (1024, 768), (1366, 1024)):
+            with self.subTest(viewport=(width, height)):
+                page, ext, errors = self.open_workspace(width, height)
+                metrics = page.evaluate("""() => ({
+                    documentWidth: document.documentElement.scrollWidth,
+                    windowWidth: innerWidth,
+                    appHeight: document.querySelector('.app').getBoundingClientRect().height,
+                    windowHeight: innerHeight
+                })""")
+                self.assertLessEqual(metrics["documentWidth"], metrics["windowWidth"] + 1)
+                self.assertLessEqual(abs(metrics["appHeight"] - metrics["windowHeight"]), 1)
+                if width <= 670:
+                    self.assertTrue(page.locator(".phone-switcher").is_visible())
+                    self.assertTrue(page.locator("#pane-left").is_visible())
+                    self.assertFalse(page.locator("#pane-right").is_visible())
+                else:
+                    self.assertFalse(page.locator(".phone-switcher").is_visible())
+                    self.assertTrue(page.locator("#pane-left").is_visible())
+                    self.assertTrue(page.locator("#pane-right").is_visible())
+                self.assert_clean(ext, errors)
+
+    def test_mobile_current_view_screenreader_metadata(self):
+        page, ext, errors = self.open_workspace(390, 844)
+        left = page.locator('.phone-side[data-side="left"]')
+        right = page.locator('.phone-side[data-side="right"]')
+        self.assertEqual("pane-left", left.get_attribute("aria-controls"))
+        self.assertEqual("pane-right", right.get_attribute("aria-controls"))
+        self.assertEqual("true", left.get_attribute("aria-current"))
+        self.assertIsNone(right.get_attribute("aria-current"))
+        right.click()
+        self.assertIsNone(left.get_attribute("aria-current"))
+        self.assertEqual("true", right.get_attribute("aria-current"))
+        self.assertTrue(page.locator("#pane-right").is_visible())
+        # Content-driven navigation must update the same ARIA state.
+        page.locator('#pane-right [data-action="open-quiz"]').click()
+        self.assertEqual("true", left.get_attribute("aria-current"))
+        self.assertIsNone(right.get_attribute("aria-current"))
+        self.assertTrue(page.locator("#pane-left .quiz-item").first.is_visible())
+        self.assert_clean(ext, errors)
+
+    def test_studio_mobile_controls_are_touch_sized(self):
+        page, ext, errors = self.open_workspace(320, 720)
+        selector = page.locator('#pane-left select[data-pane="left"]').bounding_box()
+        nav = page.locator('.phone-side[data-side="left"]').bounding_box()
+        upload = page.locator('#pane-left [data-action="upload-pdf"]').bounding_box()
+        self.assertGreaterEqual(selector["height"], 42)
+        self.assertGreaterEqual(nav["height"], 48)
+        self.assertGreaterEqual(upload["height"], 38)
+        self.assert_clean(ext, errors)
+
+    def test_studio_pdf_uses_original_document_colors_by_default(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "test-only.pdf",
+            "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        frame = page.locator('#pane-left [data-pdf-iframe]')
+        self.assertTrue(frame.evaluate("(el) => el.classList.contains('original-colors')"))
+        self.assertEqual("none", frame.evaluate("(el) => getComputedStyle(el).filter"))
+        page.locator('#pane-left [data-action="toggle-pdf-colors"]').click()
+        self.assertFalse(frame.evaluate("(el) => el.classList.contains('original-colors')"))
+        page.locator('#pane-left [data-action="toggle-pdf-colors"]').click()
+        self.assertTrue(frame.evaluate("(el) => el.classList.contains('original-colors')"))
+        self.assert_clean(ext, errors)
+
+
 if __name__ == "__main__":
     unittest.main()
