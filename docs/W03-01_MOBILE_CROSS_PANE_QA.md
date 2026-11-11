@@ -1,5 +1,10 @@
 # FOLIO W03-01 — 모바일 교차 패널 이동 QA
 
+> **추가 검증 이력 (2026-11-11):** 기존 본문의 `NOT RUN` 항목은 문서 최초 작성 당시 상태입니다. 이후 [Actions #42984415832](https://github.com/jkd04255/FOLIO/actions/runs/42984415832)에서 PR HEAD `8ccbbe85e245ac246c15c90a570d4d094b2df053`에 대해 **Chromium 6/6, WebKit 6/6 PASS**를 확인했습니다. 이는 실제 iPhone/iPad 실기기 테스트가 아닙니다.
+> **다음 소규모 수정 — 모바일 접근성:** 휴대폰 하단 화면 선택 링크는 기존 `.active` 시각 클래스만 사용하여 스크린리더의 '현재 화면' 상태가 명시되지 않았습니다. 왼쪽 초기 링크에 `aria-current="true"`, 각 링크에 `aria-controls`를 추가하고 `setPhoneSide()`에서 선택 상태에 맞춰 `aria-current`를 추가/제거하도록 변경했습니다. 스타일·레이아웃·파일 처리 로직은 수정하지 않았습니다. 신규 브라우저 테스트로 직접 탭 선택과 반대편 PDF/문제 이동에서 단일 `aria-current` 유지 및 표시 일치를 확인하며, **최신 변경 HEAD의 CI는 새로 검증 전까지 미통과 상태**입니다.
+> **QA 해석:** 브라우저에서 ARIA 속성 검증 ≠ VoiceOver/TalkBack 실제 낭독 검증. 후자는 실기기 **NOT RUN**으로 유지합니다.
+
+
 > 기준: 2026-11-11 KST · 적용 대상: `index.html`의 **로컬 정적 프로토타입**  
 > 기준 main: `1d314fc33527ebf8c52e3ce1b7cc9e09fe317568`  
 > 변경 브랜치: `fix/w03-01-mobile-cross-pane-navigation-20261111`
