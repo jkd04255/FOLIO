@@ -257,5 +257,51 @@ class WorkspaceBrowserTests(unittest.TestCase):
         self.assert_clean(ext, errors)
 
 
+    def test_studio_portrait_compact_toolbar_preserves_pdf_reading_height(self):
+        page, ext, errors = self.open_workspace(768, 1024)
+        metrics = page.evaluate("""() => {
+            const height = (selector) =>
+                document.querySelector(selector).getBoundingClientRect().height;
+            return {
+                paneTopbar: height('#pane-left .pane-topbar'),
+                pdfBar: height('#pane-left .pdf-bar'),
+                pdfControls: height('#pane-left .pdf-controls'),
+                pdfStage: height('#pane-left .pdf-stage'),
+                notesTopline: height('#pane-right .study-topline'),
+                notesPaneVisible: document.querySelector('#pane-right').getBoundingClientRect().height
+            };
+        }""")
+        self.assertLessEqual(metrics["paneTopbar"], 49)
+        self.assertLessEqual(metrics["pdfBar"], 43)
+        self.assertLessEqual(metrics["pdfControls"], 50)
+        self.assertGreater(metrics["pdfStage"], 360)
+        self.assertLessEqual(metrics["notesTopline"], 39)
+        self.assertGreater(metrics["notesPaneVisible"], 300)
+        self.assertEqual("horizontal", page.locator("#splitter").get_attribute("aria-orientation"))
+        self.assert_clean(ext, errors)
+
+    def test_studio_mobile_korean_explanation_legibility(self):
+        for width in (320, 390):
+            with self.subTest(width=width):
+                page, ext, errors = self.open_workspace(width, 844)
+                page.locator('.phone-side[data-side="right"]').click()
+                self.assertTrue(page.locator("#pane-right .notes-shell").is_visible())
+                typography = page.locator("#pane-right .key-line p").first.evaluate("""el => {
+                    const style = getComputedStyle(el);
+                    return {
+                        font: parseFloat(style.fontSize),
+                        line: parseFloat(style.lineHeight),
+                        width: el.getBoundingClientRect().width
+                    };
+                }""")
+                self.assertGreaterEqual(typography["font"], 14)
+                self.assertGreaterEqual(typography["line"], 25)
+                self.assertGreater(typography["width"], 180)
+                self.assertFalse(page.evaluate(
+                    "document.documentElement.scrollWidth > window.innerWidth + 1"
+                ))
+                self.assert_clean(ext, errors)
+
+
 if __name__ == "__main__":
     unittest.main()
