@@ -276,8 +276,8 @@ function pdfZoom(diff){S.zoom=Math.max(.7,Math.min(1.6,Math.round((S.zoom+diff)*
 function setPhoneSide(side){
   if(!['left','right'].includes(side))return;
   S.phoneSide=side;
-  $('.pane').forEach(el=>el.classList.toggle('active-phone',el.id==='pane-'+side));
-  $('.phone-side').forEach(el=>{
+  $$('.pane').forEach(el=>el.classList.toggle('active-phone',el.id==='pane-'+side));
+  $$('.phone-side').forEach(el=>{
     const active=el.dataset.side===side;
     el.classList.toggle('active',active);
     if(active)el.setAttribute('aria-current','true');
