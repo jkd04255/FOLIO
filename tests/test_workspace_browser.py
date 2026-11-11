@@ -303,5 +303,66 @@ class WorkspaceBrowserTests(unittest.TestCase):
                 self.assert_clean(ext, errors)
 
 
+    def test_tablet_pdf_zoom_preserves_scroll_and_document_node(self):
+        page, ext, errors = self.open_workspace(768, 1024)
+        stage = page.locator('#pane-left [data-pdf-stage]')
+        stage.evaluate("""el => {
+            el.dataset.sentinel = 'preserved';
+            el.scrollTop = 160;
+        }""")
+        before = stage.evaluate("(el) => el.scrollTop")
+        self.assertGreater(before, 90, "Synthetic PDF must be vertically scrollable")
+        page.locator('#pane-left [data-action="zoom-in"]').click()
+        self.assertEqual("110%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertEqual("preserved", stage.get_attribute("data-sentinel"))
+        self.assertAlmostEqual(before * 1.1, stage.evaluate("(el) => el.scrollTop"), delta=3)
+        page.locator('#pane-left [data-action="fit-pdf"]').click()
+        self.assertEqual("100%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertEqual("preserved", stage.get_attribute("data-sentinel"))
+        self.assertAlmostEqual(before, stage.evaluate("(el) => el.scrollTop"), delta=4)
+        self.assert_clean(ext, errors)
+
+    def test_mobile_zoomed_pdf_can_pan_to_both_horizontal_edges(self):
+        for width in (320, 390):
+            with self.subTest(width=width):
+                page, ext, errors = self.open_workspace(width, 844)
+                stage = page.locator('#pane-left [data-pdf-stage]')
+                for _ in range(6):
+                    page.locator('#pane-left [data-action="zoom-in"]').click()
+                self.assertEqual("160%", page.locator('#pane-left [data-zoom-count]').inner_text())
+                width_info = stage.evaluate("""el => ({
+                    viewport: el.clientWidth,
+                    content: el.scrollWidth
+                })""")
+                self.assertGreater(width_info["content"], width_info["viewport"] + 25,
+                                   "Zoomed demo PDF must have a reachable horizontal pan range")
+                stage.evaluate("(el) => el.scrollLeft = 0")
+                self.assertEqual(0, stage.evaluate("(el) => el.scrollLeft"))
+                stage.evaluate("(el) => el.scrollLeft = 9999")
+                self.assertGreater(stage.evaluate("(el) => el.scrollLeft"), 25)
+                page.locator('#pane-left [data-action="zoom-out"]').click()
+                self.assertEqual("150%", page.locator('#pane-left [data-zoom-count]').inner_text())
+                self.assert_clean(ext, errors)
+
+    def test_local_pdf_zoom_updates_fragment_without_rebuilding_iframe(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "local-only.pdf",
+            "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        frame = page.locator('#pane-left [data-pdf-iframe]')
+        frame.evaluate("(el) => el.dataset.sentinel = 'preserved'")
+        source = frame.get_attribute("src")
+        self.assertIn("#page=1&zoom=100", source)
+        page.locator('#pane-left [data-action="zoom-in"]').click()
+        self.assertEqual("preserved", frame.get_attribute("data-sentinel"))
+        self.assertEqual(source.split("#")[0] + "#page=1&zoom=110", frame.get_attribute("src"))
+        page.locator('#pane-left [data-action="fit-pdf"]').click()
+        self.assertEqual("preserved", frame.get_attribute("data-sentinel"))
+        self.assertEqual(source, frame.get_attribute("src"))
+        self.assert_clean(ext, errors)
+
+
 if __name__ == "__main__":
     unittest.main()
