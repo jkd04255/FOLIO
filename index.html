@@ -89,7 +89,7 @@ function renderPdf(side){const root=$('#body-'+side);root.replaceChildren($('#te
  pdfName.textContent=S.pdfFileName||'Lecture_04.pdf';badge.hidden=!!S.pdfUrl;
  const colorControl=$('[data-action="toggle-pdf-colors"]',root);
  if(colorControl){colorControl.hidden=!S.pdfUrl;colorControl.setAttribute('aria-pressed',String(S.pdfOriginalColors));colorControl.title=S.pdfOriginalColors?'PDF 다크 보기':'PDF 원본 색상 보기';}
- if(S.pdfUrl){demo.hidden=true;iframe.hidden=false;iframe.classList.toggle('original-colors',S.pdfOriginalColors);iframe.src=S.pdfUrl+'#page='+S.page+'&zoom='+Math.round(S.zoom*100);}else{iframe.hidden=true;demo.hidden=false;demo.style.zoom=String(S.zoom);$('[data-demo-page]',root).innerHTML=getDemoPage(S.page);}
+ if(S.pdfUrl){demo.hidden=true;iframe.hidden=false;iframe.classList.toggle('original-colors',S.pdfOriginalColors);iframe.src=S.pdfUrl+'#page='+S.page+'&zoom='+Math.round(S.zoom*100);}else{iframe.hidden=true;demo.hidden=false;demo.style.zoom=String(S.zoom);demo.style.width=Math.round(S.zoom*100)+'%';$('[data-demo-page]',root).innerHTML=getDemoPage(S.page);}
  $('[data-page-now]',root).textContent=String(S.page);$('[data-page-total]',root).textContent=S.pdfUrl?'—':String(S.total);$('[data-zoom-count]',root).textContent=Math.round(S.zoom*100)+'%';
 }
 function renderUnavailable(side,view){const root=$('#body-'+side);root.innerHTML=`<div class="study-shell"><div class="study-topline"><span>LOCAL DOCUMENT</span></div><div class="study-scroll"><div class="eyebrow">PREVIEW MODE</div><h1 class="main-title">분석되지 않은<br><em>PDF 자료입니다.</em></h1><p class="lead">현재는 화면 구조를 검토하는 로컬 프로토타입입니다. 방금 선택한 PDF는 기기 안에서만 열리며 AI 설명이나 확인문제는 생성되지 않습니다.</p><div class="key-line"><span class="line-number">—</span><div><h2>데이터 전송 없음</h2><p>외부 AI, 인증, 서버, 저장소에 파일을 보내지 않습니다. 실제 ${view==='notes'?'설명 생성':'문제 생성'}은 아직 연결되지 않았습니다.</p></div></div><div class="source-row"><button type="button" data-action="show-pdf">PDF 원본 열기 ↗</button></div></div></div>`;}
@@ -119,7 +119,7 @@ function setPdfZoom(value){
    // Keep the synthetic document and its reading position while scaling.
    const oldTop=stage.scrollTop,oldLeft=stage.scrollLeft;
    const viewer=$('[data-demo-zoom]',root);
-   if(viewer)viewer.style.zoom=String(next);
+   if(viewer){viewer.style.zoom=String(next);viewer.style.width=Math.round(next*100)+'%';}
    stage.scrollTop=oldTop*ratio;
    stage.scrollLeft=oldLeft*ratio;
   }
