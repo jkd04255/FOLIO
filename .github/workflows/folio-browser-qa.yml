@@ -2,9 +2,10 @@ name: FOLIO W03-01 browser QA (no deploy)
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, fix/w03-01-mobile-cross-pane-navigation-20261111]
     paths:
       - index.html
+      - styles/**
       - tests/**
       - .github/workflows/folio-browser-qa.yml
   workflow_dispatch:
@@ -40,3 +41,12 @@ jobs:
         env:
           FOLIO_BROWSER: webkit
         run: python -m unittest discover -s tests -p "test_*.py" -v
+      - name: Capture private design screenshots
+        run: python tests/capture_studio_preview.py
+      - name: Upload screenshot evidence (private Actions artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: folio-study-studio-preview
+          path: artifacts/studio-previews/*.png
+          retention-days: 7
+          if-no-files-found: error
