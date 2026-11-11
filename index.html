@@ -211,8 +211,8 @@ select option{color:var(--ink);background:var(--nav)}
   </main>
 
   <nav class="phone-switcher" aria-label="휴대폰 화면 선택">
-    <a class="phone-side active" data-side="left" href="#pane-left">왼쪽 화면</a>
-    <a class="phone-side" data-side="right" href="#pane-right">오른쪽 화면</a>
+    <a class="phone-side active" data-side="left" href="#pane-left" aria-controls="pane-left" aria-current="true">왼쪽 화면</a>
+    <a class="phone-side" data-side="right" href="#pane-right" aria-controls="pane-right">오른쪽 화면</a>
   </nav>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
@@ -273,7 +273,17 @@ function renderBoth(){renderPane('left');renderPane('right');$('#globalProgressL
 function setMode(side,mode){if(!['pdf','notes','quiz'].includes(mode))return;S.mode[side]=mode;renderPane(side);}
 function pdfChangePage(delta){S.page=Math.max(1,Math.min(S.pdfUrl?1000:S.total,S.page+delta));for(const side of ['left','right'])if(S.mode[side]==='pdf')renderPdf(side);$('#globalProgressLabel').textContent=S.pdfUrl?S.page+'쪽':S.page+' / '+S.total;$('#globalProgress').style.width=Math.min(100,S.page/S.total*100)+'%';}
 function pdfZoom(diff){S.zoom=Math.max(.7,Math.min(1.6,Math.round((S.zoom+diff)*10)/10));for(const side of ['left','right'])if(S.mode[side]==='pdf')renderPdf(side);}
-function setPhoneSide(side){S.phoneSide=side;$$('.pane').forEach(el=>el.classList.toggle('active-phone',el.id==='pane-'+side));$$('.phone-side').forEach(el=>el.classList.toggle('active',el.dataset.side===side));}
+function setPhoneSide(side){
+  if(!['left','right'].includes(side))return;
+  S.phoneSide=side;
+  $('.pane').forEach(el=>el.classList.toggle('active-phone',el.id==='pane-'+side));
+  $('.phone-side').forEach(el=>{
+    const active=el.dataset.side===side;
+    el.classList.toggle('active',active);
+    if(active)el.setAttribute('aria-current','true');
+    else el.removeAttribute('aria-current');
+  });
+}
 function revealPhoneSide(side){if(window.matchMedia('(max-width: 670px)').matches)setPhoneSide(side);}
 function setSplit(pct){S.leftPercent=Math.max(30,Math.min(70,pct));$('#workspace').style.setProperty('--split',S.leftPercent+'%');$('#splitter').setAttribute('aria-valuenow',String(Math.round(S.leftPercent)));}
 function setTop(pct){S.topPercent=Math.max(30,Math.min(70,pct));$('#workspace').style.setProperty('--top',S.topPercent+'%');$('#splitter').setAttribute('aria-valuenow',String(Math.round(S.topPercent)));}
