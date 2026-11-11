@@ -9,3 +9,11 @@
 - QA: 현재 GitHub Actions 정의 없음. 이후 UI 변경 시 HTML/JS 문법, 요청/네트워크 점검, 768/1024/1366px 태블릿 레이아웃, 좌우 컨텐츠 선택/패널 크기 조절과 키보드 동작을 검사하고 증거 기록.
 - 이번 PR은 문서만 추가했으므로 신규 런타임/기기 검증을 수행했다고 주장하지 않음.
 - 다음 후보: 좌우 패널에서 PDF 표시 영역에 불필요한 안내·아이콘이 남아 있는지 시안의 실제 화면을 보고 단일 개선 제안.
+
+## 추가로 저장한 원본 Frontend Design Skill
+
+- 사용자가 첨부한 `SKILL.md`를 글자 내용 수정 없이 `.agents/skills/frontend-design/SKILL.md`에 저장했습니다.
+- Anthropic `frontend-design`의 Apache-2.0 라이선스를 `.agents/skills/frontend-design/LICENSE.txt`에 동봉했습니다. 참고: https://github.com/anthropics/skills/tree/main/skills/frontend-design
+- 기존 `.agents/skills/human-web-design/SKILL.md`와 병행합니다. **승인된 디자인·프로젝트별 운영/Gate·QA 정책 > Human Web Design 프로젝트 보호 규칙 > 원본 Frontend Design 일반 심미 지침** 순으로 적용합니다.
+- 이 변경은 문서·에이전트 지침 추가일 뿐이며 기존 UI·제품 코드·테스트·배포를 변경하거나 기존 HOLD를 해제하지 않습니다.
+- 사용자가 본 PR의 병합을 별도로 승인하기 전에는 main 반영 및 공개 배포를 진행하지 않습니다.
