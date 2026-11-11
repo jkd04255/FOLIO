@@ -102,7 +102,32 @@ function renderPane(side){const mode=S.mode[side];const sel=$(`.pane-selector[da
 function renderBoth(){renderPane('left');renderPane('right');$('#globalProgressLabel').textContent=S.page+' / '+S.total;$('#globalProgress').style.width=Math.min(100,(S.page/S.total)*100)+'%';}
 function setMode(side,mode){if(!['pdf','notes','quiz'].includes(mode))return;S.mode[side]=mode;renderPane(side);}
 function pdfChangePage(delta){S.page=Math.max(1,Math.min(S.pdfUrl?1000:S.total,S.page+delta));for(const side of ['left','right'])if(S.mode[side]==='pdf')renderPdf(side);$('#globalProgressLabel').textContent=S.pdfUrl?S.page+'쪽':S.page+' / '+S.total;$('#globalProgress').style.width=Math.min(100,S.page/S.total*100)+'%';}
-function pdfZoom(diff){S.zoom=Math.max(.7,Math.min(1.6,Math.round((S.zoom+diff)*10)/10));for(const side of ['left','right'])if(S.mode[side]==='pdf')renderPdf(side);}
+function setPdfZoom(value){
+ const next=Math.max(.7,Math.min(1.6,Math.round(value*10)/10));
+ if(next===S.zoom)return;
+ const ratio=next/S.zoom;
+ S.zoom=next;
+ for(const side of ['left','right'])if(S.mode[side]==='pdf'){
+  const root=$('#body-'+side);
+  const stage=$('[data-pdf-stage]',root);
+  if(!stage){renderPdf(side);continue;}
+  if(S.pdfUrl){
+   // Native PDF viewers own their internal scroll position; update only the fragment.
+   const frame=$('[data-pdf-iframe]',root);
+   if(frame)frame.src=S.pdfUrl+'#page='+S.page+'&zoom='+Math.round(next*100);
+  }else{
+   // Keep the synthetic document and its reading position while scaling.
+   const oldTop=stage.scrollTop,oldLeft=stage.scrollLeft;
+   const viewer=$('[data-demo-zoom]',root);
+   if(viewer)viewer.style.zoom=String(next);
+   stage.scrollTop=oldTop*ratio;
+   stage.scrollLeft=oldLeft*ratio;
+  }
+  const label=$('[data-zoom-count]',root);
+  if(label)label.textContent=Math.round(next*100)+'%';
+ }
+}
+function pdfZoom(diff){setPdfZoom(S.zoom+diff);}
 function setPhoneSide(side){
   if(!['left','right'].includes(side))return;
   S.phoneSide=side;
@@ -128,7 +153,7 @@ function quizReset(){S.answer={};S.submitted={};for(const side of ['left','right
 function handleAction(action,target){const side=target.closest('.pane')?.id?.replace('pane-','')||'left';switch(action){
  case 'upload-pdf':$('[data-pdf-input]',target.closest('.pane')).click();break;
  case 'toggle-pdf-colors':S.pdfOriginalColors=!S.pdfOriginalColors;for(const p of ['left','right'])if(S.mode[p]==='pdf')renderPdf(p);toast(S.pdfOriginalColors?'원본 PDF 색상':'다크 PDF 보기');break;
- case 'fit-pdf':S.zoom=1;for(const p of ['left','right'])if(S.mode[p]==='pdf')renderPdf(p);break;
+ case 'fit-pdf':setPdfZoom(1);break;
  case 'prev-page':pdfChangePage(-1);break;case 'next-page':pdfChangePage(1);break;
  case 'zoom-in':pdfZoom(.1);break;case 'zoom-out':pdfZoom(-.1);break;
  case 'source-page':sourcePage(side,Number(target.dataset.targetPage||12));break;
