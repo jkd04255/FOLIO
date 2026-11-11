@@ -273,14 +273,15 @@ function renderBoth(){renderPane('left');renderPane('right');$('#globalProgressL
 function setMode(side,mode){if(!['pdf','notes','quiz'].includes(mode))return;S.mode[side]=mode;renderPane(side);}
 function pdfChangePage(delta){S.page=Math.max(1,Math.min(S.pdfUrl?1000:S.total,S.page+delta));for(const side of ['left','right'])if(S.mode[side]==='pdf')renderPdf(side);$('#globalProgressLabel').textContent=S.pdfUrl?S.page+'쪽':S.page+' / '+S.total;$('#globalProgress').style.width=Math.min(100,S.page/S.total*100)+'%';}
 function pdfZoom(diff){S.zoom=Math.max(.7,Math.min(1.6,Math.round((S.zoom+diff)*10)/10));for(const side of ['left','right'])if(S.mode[side]==='pdf')renderPdf(side);}
-function setPhoneSide(side){S.phoneSide=side;$$('.pane').forEach(el=>el.classList.toggle('active-phone',el.id==='pane-'+side));$$('.phone-side').forEach(el=>el.classList.toggle('active',el.dataset.side===side));}
+function setPhoneSide(side){S.phoneSide=side;$('.pane').forEach(el=>el.classList.toggle('active-phone',el.id==='pane-'+side));$('.phone-side').forEach(el=>el.classList.toggle('active',el.dataset.side===side));}
+function revealPhoneSide(side){if(window.matchMedia('(max-width: 670px)').matches)setPhoneSide(side);}
 function setSplit(pct){S.leftPercent=Math.max(30,Math.min(70,pct));$('#workspace').style.setProperty('--split',S.leftPercent+'%');$('#splitter').setAttribute('aria-valuenow',String(Math.round(S.leftPercent)));}
 function setTop(pct){S.topPercent=Math.max(30,Math.min(70,pct));$('#workspace').style.setProperty('--top',S.topPercent+'%');$('#splitter').setAttribute('aria-valuenow',String(Math.round(S.topPercent)));}
 function portrait(){return window.matchMedia('(orientation: portrait) and (min-width: 671px) and (max-width: 1200px)').matches;}
 function updateSeparator(){const sep=$('#splitter');sep.setAttribute('aria-orientation',portrait()?'horizontal':'vertical');sep.setAttribute('aria-valuenow',String(Math.round(portrait()?S.topPercent:S.leftPercent)));}
 function swap(){[S.mode.left,S.mode.right]=[S.mode.right,S.mode.left];renderBoth();toast('좌우 화면을 교환했습니다.');}
 async function loadFile(file){if(!file)return;if(file.type!=='application/pdf'&&!/\.pdf$/i.test(file.name)){toast('PDF 파일을 선택해 주세요.');return;}if(file.size>20*1024*1024){toast('승인된 시험 한도에 따라 PDF는 20MB 이하여야 합니다.');return;}if(S.pdfUrl)URL.revokeObjectURL(S.pdfUrl);S.pdfUrl=URL.createObjectURL(file);S.pdfFileName=file.name;S.page=1;S.zoom=1;renderBoth();toast('PDF가 기기 안에서 열렸습니다. 외부 전송은 하지 않았습니다.');}
-function sourcePage(pane,page){const opposite=pane==='left'?'right':'left';S.page=page;setMode(opposite,'pdf');pdfChangePage(0);toast(`${page}쪽 PDF를 ${opposite==='left'?'왼쪽':'오른쪽'} 화면에 표시합니다.`);}
+function sourcePage(pane,page){const opposite=pane==='left'?'right':'left';S.page=page;setMode(opposite,'pdf');pdfChangePage(0);revealPhoneSide(opposite);toast(`${page}쪽 PDF를 ${opposite==='left'?'왼쪽':'오른쪽'} 화면에 표시합니다.`);}
 function quizChangeAnswer(qid,answer){if(S.submitted[qid])return;S.answer[qid]=answer;for(const side of ['left','right'])if(S.mode[side]==='quiz'){const root=$('#body-'+side),el=$(`[data-q-item="${qid}"]`,root);if(!el)continue;if(typeof answer==='number'){$$('.choice',el).forEach(c=>c.setAttribute('aria-pressed',String(Number(c.dataset.choice)===answer)));}else{const input=$('.short-answer',el);if(input&&document.activeElement!==input)input.value=answer;}}}
 function quizSubmit(qid){const q=Q[qid];if(S.answer[qid]===undefined||S.answer[qid]===''){toast('먼저 답안을 입력해 주세요.');return;}S.submitted[qid]=true;for(const side of ['left','right'])if(S.mode[side]==='quiz'){const prev=$('.study-scroll',$('#body-'+side))?.scrollTop||0;renderQuiz(side);const nextScroll=$('.study-scroll',$('#body-'+side));if(nextScroll)nextScroll.scrollTop=prev;}toast(q.kind==='short'?'해설을 확인해 주세요. 자동 채점은 연결 전입니다.':'문항 해설을 표시했습니다.');}
 function quizReset(){S.answer={};S.submitted={};for(const side of ['left','right'])if(S.mode[side]==='quiz')renderQuiz(side);toast('시연용 답안을 초기화했습니다.');}
@@ -291,7 +292,7 @@ function handleAction(action,target){const side=target.closest('.pane')?.id?.rep
  case 'prev-page':pdfChangePage(-1);break;case 'next-page':pdfChangePage(1);break;
  case 'zoom-in':pdfZoom(.1);break;case 'zoom-out':pdfZoom(-.1);break;
  case 'source-page':sourcePage(side,Number(target.dataset.targetPage||12));break;
- case 'open-quiz':setMode(side==='left'?'right':'left','quiz');toast('반대편 화면에 문제를 열었습니다.');break;
+ case 'open-quiz':{const opposite=side==='left'?'right':'left';setMode(opposite,'quiz');revealPhoneSide(opposite);toast('반대편 화면에 문제를 열었습니다.');break;}
  case 'show-pdf':setMode(side,'pdf');break;
  case 'submit-answer':quizSubmit(Number(target.dataset.question));break;
  case 'reset-quiz':quizReset();break;
