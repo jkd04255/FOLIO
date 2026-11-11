@@ -183,6 +183,11 @@ svg { flex-shrink: 0; }
   .splitter::before { inset: -4px 0; }
   .splitter-grip { flex-direction: row; padding: 0 12px; }
   .swap-button { top: 50%; left: calc(50% + 39px); transform: translateY(-50%); }
+  /* Preserve the PDF reading area in the stacked portrait workspace. */
+  .pane-topbar { height: 48px; min-height: 48px; }
+  .pdf-bar { height: 42px; min-height: 42px; }
+  .pdf-controls { height: 49px; min-height: 49px; }
+  .study-topline { height: 38px; min-height: 38px; }
   .study-scroll { padding-top: 30px; padding-bottom: 36px; }
   .main-title { font-size: 35px; }
 }
@@ -236,7 +241,7 @@ svg { flex-shrink: 0; }
   .lead { font-size: 14px; margin-bottom: 31px; }
   .key-line { padding: 23px 0 26px; gap: 10px; grid-template-columns: 24px minmax(0, 1fr); }
   .key-line h2 { font-size: 16px; }
-  .key-line p { font-size: 13px; }
+  .key-line p { font-size: 14px; line-height: 1.86; }
   .formula { font-size: 17px; }
   .quiz-question { font-size: 16px; }
   .choice { min-height: 48px; }
