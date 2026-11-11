@@ -364,5 +364,71 @@ class WorkspaceBrowserTests(unittest.TestCase):
         self.assert_clean(ext, errors)
 
 
+    def test_local_pdf_color_toggle_keyboard_focus_and_frame_identity(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "local-color-test.pdf",
+            "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.locator('#pane-right select[data-pane="right"]').select_option("pdf")
+        before_sources = []
+        for side in ("left", "right"):
+            frame = page.locator(f'#pane-{side} [data-pdf-iframe]')
+            frame.evaluate("(el) => el.dataset.identity = 'pdf-stays-mounted'")
+            before_sources.append(frame.get_attribute("src"))
+            self.assertTrue(frame.evaluate(
+                "(el) => el.classList.contains('original-colors')"
+            ))
+        toggle = page.locator('#pane-left [data-action="toggle-pdf-colors"]')
+        toggle.focus()
+        self.assertTrue(toggle.evaluate("(el) => document.activeElement === el"))
+        toggle.press("Enter")
+        self.assertTrue(toggle.evaluate(
+            "(el) => document.activeElement === el"
+        ), "Keyboard focus must remain on the toggle after changing native PDF colors")
+        self.assertEqual("false", toggle.get_attribute("aria-pressed"))
+        for side, src in zip(("left", "right"), before_sources):
+            frame = page.locator(f'#pane-{side} [data-pdf-iframe]')
+            self.assertEqual("pdf-stays-mounted", frame.get_attribute("data-identity"))
+            self.assertEqual(src, frame.get_attribute("src"))
+            self.assertFalse(frame.evaluate(
+                "(el) => el.classList.contains('original-colors')"
+            ))
+        toggle.press("Enter")
+        self.assertEqual("true", toggle.get_attribute("aria-pressed"))
+        self.assertTrue(toggle.evaluate("(el) => document.activeElement === el"))
+        self.assert_clean(ext, errors)
+
+    def test_pdf_zoom_limits_disable_only_the_unavailable_action(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.locator('#pane-right select[data-pane="right"]').select_option("pdf")
+        plus = page.locator('#pane-left [data-action="zoom-in"]')
+        minus = page.locator('#pane-left [data-action="zoom-out"]')
+        self.assertTrue(plus.is_enabled())
+        self.assertTrue(minus.is_enabled())
+        for _ in range(3):
+            minus.click()
+        self.assertEqual("70%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertFalse(minus.is_enabled())
+        self.assertFalse(page.locator('#pane-right [data-action="zoom-out"]').is_enabled())
+        self.assertTrue(plus.is_enabled())
+        plus.focus()
+        plus.press("Enter")
+        self.assertEqual("80%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertTrue(minus.is_enabled())
+        for _ in range(8):
+            plus.click()
+        self.assertEqual("160%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertFalse(plus.is_enabled())
+        self.assertFalse(page.locator('#pane-right [data-action="zoom-in"]').is_enabled())
+        self.assertTrue(minus.is_enabled())
+        page.locator('#pane-left [data-action="fit-pdf"]').click()
+        self.assertEqual("100%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertTrue(plus.is_enabled())
+        self.assertTrue(minus.is_enabled())
+        self.assert_clean(ext, errors)
+
+
 if __name__ == "__main__":
     unittest.main()
