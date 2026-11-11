@@ -77,7 +77,7 @@ svg { flex-shrink: 0; }
   appearance: none; -webkit-appearance: none; background: transparent;
   color: var(--ink-deep); border: 0; border-bottom: 2px solid var(--accent);
   border-radius: 0; padding: 8px 22px 7px 1px;
-  font-size: 16px; font-weight: 740; letter-spacing: -.5px; max-width: 150px;
+  font-size: 16px; font-weight: 740; letter-spacing: -.5px; max-width: 150px; min-height: 44px;
 }
 .pane-selector option { color: var(--ink); background: #fff; }
 .select-chevron { position: absolute; right: 1px; top: 50%; transform: translateY(-50%); color: var(--accent); font-size: 16px; pointer-events: none; }
@@ -212,7 +212,7 @@ svg { flex-shrink: 0; }
   .pane-topbar { height: 50px; min-height: 50px; padding: 0 18px; }
   .pane-select-wrap { gap: 11px; }
   .pane-label { font-size: 12px; }
-  .pane-selector { font-size: 15px; padding: 6px 20px 7px 0; }
+  .pane-selector { font-size: 15px; padding: 6px 20px 7px 0; min-height: 44px; }
   .phone-switcher { height: calc(57px + var(--safe-bottom)); min-height: calc(57px + var(--safe-bottom)); padding-bottom: var(--safe-bottom); display: flex; gap: 0; background: #fff; border-top: 1px solid var(--line); }
   .phone-side { flex: 1; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #687e89; font-size: 13px; font-weight: 630; position: relative; }
   .phone-side.active { color: var(--accent-strong); background: #f3f9f8; }
