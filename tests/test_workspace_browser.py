@@ -133,6 +133,10 @@ class WorkspaceBrowserTests(unittest.TestCase):
         splitter.press("ArrowRight")
         self.assertEqual("60", splitter.get_attribute("aria-valuenow"))
         page.set_viewport_size({"width": 768, "height": 1024})
+        # Resize/media-query event dispatch is asynchronous in real browsers.
+        page.wait_for_function(
+            "document.querySelector('#splitter').getAttribute('aria-orientation') === 'horizontal'"
+        )
         self.assertEqual("horizontal", splitter.get_attribute("aria-orientation"))
         splitter.focus()
         splitter.press("ArrowDown")
