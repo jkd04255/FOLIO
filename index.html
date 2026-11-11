@@ -84,6 +84,24 @@ function getDemoPage(page){
  const desc=page===12?'신호를 시간축에서 이동시키면 주파수 영역에는 선형적인 위상 변화가 생깁니다.':page===13?'복소 지수함수는 크기 1인 성분이며 위상 변화만 나타냅니다.':'다양한 신호 변환을 분석할 때 변환쌍의 부호와 변수에 주의해야 합니다.';
  return `<div class="demo-document-id"><span>FOLIO · SIGNALS AND SYSTEMS</span><span>LECTURE 04</span></div><div class="demo-rule"></div><div class="demo-section">04 / FOURIER TRANSFORM</div><h2 class="demo-title">${heading}</h2><p class="demo-lead">${desc}<br>아래는 실제 강의자료가 아닌 시연용 내용입니다.</p><div class="demo-equation">x(t − t₀) &nbsp; ⟷ &nbsp; X(ω)e<sup>−jωt₀</sup></div><div class="demo-figure"><svg viewBox="0 0 470 160" aria-hidden="true" preserveAspectRatio="none"><line x1="0" y1="103" x2="470" y2="103" stroke="#78889c" stroke-width="1"/><line x1="235" y1="16" x2="235" y2="148" stroke="#78889c" stroke-width="1"/><path d="M0 103 C30 103 42 100 65 89 C86 77 100 54 120 49 C141 45 154 74 170 90 C182 100 199 103 235 103 C265 103 281 100 301 90 C316 82 337 62 355 55 C379 47 402 77 420 91 C435 101 450 103 470 103" stroke="#9ab1ff" stroke-width="2.3" fill="none"/><path d="M0 103 C64 103 67 104 86 103 C106 101 111 96 130 90 C151 82 162 61 184 55 C205 47 225 75 241 88 C260 101 278 103 307 103 C341 103 356 101 375 91 C392 82 412 62 435 52 C446 49 462 54 470 58" stroke="#a3abb8" stroke-width="1.7" stroke-dasharray="6 6" fill="none"/></svg></div><div class="demo-figcaption">Figure ${page===12?'4.2':'4.'+(page%7+1)} — 시간 이동된 신호의 표현 (시연용)</div><div class="demo-foot"><span>Department of Electrical Engineering</span><span>${page} / 42</span></div>`;
 }
+function syncPdfZoomControls(root){
+ const out=$('[data-action="zoom-out"]',root),zoomIn=$('[data-action="zoom-in"]',root);
+ if(out)out.disabled=S.zoom<=.7;
+ if(zoomIn)zoomIn.disabled=S.zoom>=1.6;
+}
+function togglePdfColors(){
+ S.pdfOriginalColors=!S.pdfOriginalColors;
+ for(const side of ['left','right'])if(S.mode[side]==='pdf'){
+  const root=$('#body-'+side);
+  const control=$('[data-action="toggle-pdf-colors"]',root),frame=$('[data-pdf-iframe]',root);
+  if(control){
+   control.setAttribute('aria-pressed',String(S.pdfOriginalColors));
+   control.title=S.pdfOriginalColors?'PDF 다크 보기':'PDF 원본 색상 보기';
+  }
+  if(frame)frame.classList.toggle('original-colors',S.pdfOriginalColors);
+ }
+ toast(S.pdfOriginalColors?'원본 PDF 색상':'다크 PDF 보기');
+}
 function renderPdf(side){const root=$('#body-'+side);root.replaceChildren($('#template-pdf').content.cloneNode(true));
  const pdfName=$('[data-pdf-name]',root),badge=$('[data-demo-badge]',root),iframe=$('[data-pdf-iframe]',root),demo=$('[data-demo-zoom]',root);
  pdfName.textContent=S.pdfFileName||'Lecture_04.pdf';badge.hidden=!!S.pdfUrl;
@@ -91,6 +109,7 @@ function renderPdf(side){const root=$('#body-'+side);root.replaceChildren($('#te
  if(colorControl){colorControl.hidden=!S.pdfUrl;colorControl.setAttribute('aria-pressed',String(S.pdfOriginalColors));colorControl.title=S.pdfOriginalColors?'PDF 다크 보기':'PDF 원본 색상 보기';}
  if(S.pdfUrl){demo.hidden=true;iframe.hidden=false;iframe.classList.toggle('original-colors',S.pdfOriginalColors);iframe.src=S.pdfUrl+'#page='+S.page+'&zoom='+Math.round(S.zoom*100);}else{iframe.hidden=true;demo.hidden=false;demo.style.zoom=String(S.zoom);demo.style.width=Math.round(S.zoom*100)+'%';$('[data-demo-page]',root).innerHTML=getDemoPage(S.page);}
  $('[data-page-now]',root).textContent=String(S.page);$('[data-page-total]',root).textContent=S.pdfUrl?'—':String(S.total);$('[data-zoom-count]',root).textContent=Math.round(S.zoom*100)+'%';
+ syncPdfZoomControls(root);
 }
 function renderUnavailable(side,view){const root=$('#body-'+side);root.innerHTML=`<div class="study-shell"><div class="study-topline"><span>LOCAL DOCUMENT</span></div><div class="study-scroll"><div class="eyebrow">PREVIEW MODE</div><h1 class="main-title">분석되지 않은<br><em>PDF 자료입니다.</em></h1><p class="lead">현재는 화면 구조를 검토하는 로컬 프로토타입입니다. 방금 선택한 PDF는 기기 안에서만 열리며 AI 설명이나 확인문제는 생성되지 않습니다.</p><div class="key-line"><span class="line-number">—</span><div><h2>데이터 전송 없음</h2><p>외부 AI, 인증, 서버, 저장소에 파일을 보내지 않습니다. 실제 ${view==='notes'?'설명 생성':'문제 생성'}은 아직 연결되지 않았습니다.</p></div></div><div class="source-row"><button type="button" data-action="show-pdf">PDF 원본 열기 ↗</button></div></div></div>`;}
 function renderNotes(side){if(S.pdfUrl){renderUnavailable(side,'notes');return;}$('#body-'+side).replaceChildren($('#template-notes').content.cloneNode(true));}
@@ -125,6 +144,7 @@ function setPdfZoom(value){
   }
   const label=$('[data-zoom-count]',root);
   if(label)label.textContent=Math.round(next*100)+'%';
+  syncPdfZoomControls(root);
  }
 }
 function pdfZoom(diff){setPdfZoom(S.zoom+diff);}
@@ -152,7 +172,7 @@ function quizSubmit(qid){const q=Q[qid];if(S.answer[qid]===undefined||S.answer[q
 function quizReset(){S.answer={};S.submitted={};for(const side of ['left','right'])if(S.mode[side]==='quiz')renderQuiz(side);toast('시연용 답안을 초기화했습니다.');}
 function handleAction(action,target){const side=target.closest('.pane')?.id?.replace('pane-','')||'left';switch(action){
  case 'upload-pdf':$('[data-pdf-input]',target.closest('.pane')).click();break;
- case 'toggle-pdf-colors':S.pdfOriginalColors=!S.pdfOriginalColors;for(const p of ['left','right'])if(S.mode[p]==='pdf')renderPdf(p);toast(S.pdfOriginalColors?'원본 PDF 색상':'다크 PDF 보기');break;
+ case 'toggle-pdf-colors':togglePdfColors();break;
  case 'fit-pdf':setPdfZoom(1);break;
  case 'prev-page':pdfChangePage(-1);break;case 'next-page':pdfChangePage(1);break;
  case 'zoom-in':pdfZoom(.1);break;case 'zoom-out':pdfZoom(-.1);break;
