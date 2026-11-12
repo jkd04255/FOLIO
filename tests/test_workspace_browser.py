@@ -487,5 +487,92 @@ class WorkspaceBrowserTests(unittest.TestCase):
         self.assert_clean(ext, errors)
 
 
+    def test_invalid_local_pdf_replacement_keeps_existing_document(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        upload = page.locator('#pane-left input[data-pdf-input]')
+        upload.set_input_files({
+            "name": "existing.pdf",
+            "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'existing.pdf'
+        """)
+        page.locator('#pane-left [data-action="next-page"]').click()
+        page.locator('#pane-left [data-action="zoom-in"]').click()
+        url = page.locator('#pane-left [data-pdf-iframe]').get_attribute("src")
+        page.evaluate("""() => {
+            window.__revokedPDFUrls = [];
+            const original = URL.revokeObjectURL.bind(URL);
+            URL.revokeObjectURL = (value) => {
+                window.__revokedPDFUrls.push(value);
+                return original(value);
+            };
+        }""")
+        for name, payload in (("pretend.pdf", b"<html>not a PDF</html>"),
+                              ("empty.pdf", b"")):
+            with self.subTest(name=name):
+                page.locator('#pane-left input[data-pdf-input]').set_input_files({
+                    "name": name,
+                    "mimeType": "application/pdf",
+                    "buffer": payload,
+                })
+                if payload:
+                    page.wait_for_function("""() =>
+                        document.querySelector('#toast').textContent.includes('형식이 올바르지')
+                    """)
+                else:
+                    page.wait_for_function("""() =>
+                        document.querySelector('#toast').textContent.includes('1바이트 이상')
+                    """)
+                self.assertEqual("existing.pdf",
+                                 page.locator('#pane-left [data-pdf-name]').inner_text())
+                self.assertEqual(url,
+                                 page.locator('#pane-left [data-pdf-iframe]').get_attribute("src"))
+                self.assertEqual("2", page.locator('#pane-left [data-page-now]').inner_text())
+                self.assertEqual("110%", page.locator('#pane-left [data-zoom-count]').inner_text())
+                self.assertEqual([], page.evaluate("window.__revokedPDFUrls"))
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "replacement.pdf",
+            "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'replacement.pdf'
+        """)
+        new_url = page.locator('#pane-left [data-pdf-iframe]').get_attribute("src")
+        self.assertNotEqual(url.split("#")[0], new_url.split("#")[0])
+        self.assertIn("#page=1&zoom=100", new_url)
+        self.assertEqual("1", page.locator('#pane-left [data-page-now]').inner_text())
+        self.assertEqual("100%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertEqual([url.split("#")[0]], page.evaluate("window.__revokedPDFUrls"))
+        self.assert_clean(ext, errors)
+
+    def test_keyboard_local_pdf_file_picker_restores_focus_after_selection(self):
+        for width, height in ((390, 844), (1024, 768)):
+            with self.subTest(viewport=width):
+                page, ext, errors = self.open_workspace(width, height)
+                trigger = page.locator('#pane-left [data-action="upload-pdf"]')
+                trigger.focus()
+                self.assertTrue(trigger.evaluate("(el) => document.activeElement === el"))
+                with page.expect_file_chooser() as chooser:
+                    trigger.press("Enter")
+                chooser.value.set_files({
+                    "name": "keyboard.pdf",
+                    "mimeType": "application/pdf",
+                    "buffer": synthetic_pdf(),
+                })
+                page.wait_for_function("""() =>
+                    document.querySelector('#pane-left [data-pdf-name]').textContent === 'keyboard.pdf'
+                """)
+                self.assertTrue(trigger.evaluate(
+                    "(el) => document.activeElement === el"
+                ), "Keyboard focus must return to the newly mounted upload control")
+                self.assertTrue(page.locator(
+                    '#pane-left [data-pdf-iframe]'
+                ).get_attribute("src").startswith("blob:"))
+                self.assert_clean(ext, errors)
+
+
 if __name__ == "__main__":
     unittest.main()
