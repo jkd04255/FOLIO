@@ -250,6 +250,9 @@ class WorkspaceBrowserTests(unittest.TestCase):
             "mimeType": "application/pdf",
             "buffer": synthetic_pdf(),
         })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'test-only.pdf'
+        """)
         frame = page.locator('#pane-left [data-pdf-iframe]')
         self.assertTrue(frame.evaluate("(el) => el.classList.contains('original-colors')"))
         self.assertEqual("none", frame.evaluate("(el) => getComputedStyle(el).filter"))
@@ -354,6 +357,9 @@ class WorkspaceBrowserTests(unittest.TestCase):
             "mimeType": "application/pdf",
             "buffer": synthetic_pdf(),
         })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'local-only.pdf'
+        """)
         frame = page.locator('#pane-left [data-pdf-iframe]')
         frame.evaluate("(el) => el.dataset.sentinel = 'preserved'")
         source = frame.get_attribute("src")
@@ -374,6 +380,9 @@ class WorkspaceBrowserTests(unittest.TestCase):
             "mimeType": "application/pdf",
             "buffer": synthetic_pdf(),
         })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'local-color-test.pdf'
+        """)
         page.locator('#pane-right select[data-pane="right"]').select_option("pdf")
         before_sources = []
         for side in ("left", "right"):
@@ -440,6 +449,9 @@ class WorkspaceBrowserTests(unittest.TestCase):
             "mimeType": "application/pdf",
             "buffer": synthetic_pdf(),
         })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'private-local-test.pdf'
+        """)
         page.locator('#pane-right select[data-pane="right"]').select_option("pdf")
         nodes = {}
         for side in ("left", "right"):
