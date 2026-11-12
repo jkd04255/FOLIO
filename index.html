@@ -3,179 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0b0f16">
-  <title>FOLIO — Dark workspace</title>
-  <style>
-
-/* FOLIO Workspace / tablet-first full-bleed design / independent from legacy styles */
-:root{
-  color-scheme:light;
-  --ink:#171d22;--ink-soft:#424b50;--muted:#8e979b;--line:#e8ebeb;
-  --accent:#405bdb;--paper:#fff;--canvas:#e9eced;--canvas-dark:#e2e6e7;
-  --nav:#f9faf9;--bg:#fff;--split:57%;--top:53%;--safe-bottom:env(safe-area-inset-bottom,0px);
-  font-family:Inter,"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Noto Sans KR",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}body{background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:default;opacity:.4}button,select{-webkit-tap-highlight-color:transparent}button:focus-visible,select:focus-visible,.splitter:focus-visible{outline:2px solid var(--accent);outline-offset:2px}svg{flex-shrink:0}sup{font-size:.67em}.app{width:100%;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}.session-bar{height:56px;min-height:56px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 24px;background:#fff;border-bottom:1px solid var(--line);position:relative;z-index:4}.brand{display:flex;align-items:center;gap:9px;font-size:23px;letter-spacing:-1.8px;font-weight:730;line-height:1}.brand-period{color:var(--accent)}.brand-symbol{height:22px;width:22px;display:flex;align-items:end;gap:3px;transform:skew(-10deg)}.brand-symbol i{display:block;background:var(--accent);border-radius:1px}.brand-symbol i:nth-child(1){height:11px;width:5px}.brand-symbol i:nth-child(2){height:19px;width:5px}.brand-symbol i:nth-child(3){height:15px;width:5px}.session-title{display:flex;align-items:center;gap:12px;min-width:0}.lecture-title{font-size:12px;font-weight:650;letter-spacing:-.25px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lecture-muted{color:#b7bfc2;padding:0 6px}.session-tag{padding-left:12px;border-left:1px solid #dce0e1;color:var(--muted);font-size:11px;white-space:nowrap}.session-stats{justify-self:end;display:flex;align-items:center;gap:12px}.progress-mini{display:block;background:#e7eaef;width:98px;height:3px;overflow:hidden;border-radius:4px}.progress-current{display:block;background:var(--accent);height:100%;transition:width .15s ease}.progress-copy{color:var(--ink-soft);font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}.workspace{width:100%;height:100%;min-height:0;display:grid;grid-template-columns:minmax(0,var(--split)) 9px minmax(0,1fr);background:#fff;overflow:hidden}.pane{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}.pane-topbar{height:54px;min-height:54px;background:var(--nav);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 21px;gap:10px}.pane-select-wrap{display:flex;align-items:center;gap:13px;position:relative}.pane-label{color:#a0a9aa;font-size:10px;font-weight:640;letter-spacing:.01em;white-space:nowrap}.pane-selector{border:0;appearance:none;background:transparent;color:var(--ink);font-size:15px;font-weight:720;letter-spacing:-.6px;padding:7px 19px 7px 0;cursor:pointer;max-width:140px}.select-chevron{pointer-events:none;position:absolute;right:0;top:50%;transform:translateY(-54%);font-size:16px;color:#737d83}.pane-context{font-size:9px;color:#a2aaad;letter-spacing:1.3px;font-weight:750;white-space:nowrap}.pane-body{position:relative;min-width:0;min-height:0;flex:1;overflow:hidden}.splitter{position:relative;background:#dfe3e4;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:col-resize;user-select:none;z-index:3}.splitter:before{content:"";position:absolute;inset:0 -5px}.splitter-grip{display:flex;flex-direction:column;gap:4px;pointer-events:none}.splitter-grip i{width:3px;height:3px;background:#899398;border-radius:50%}.swap-button{position:absolute;top:calc(50% + 38px);left:50%;transform:translateX(-50%);width:31px;height:31px;border:1px solid #dce1e3;border-radius:50%;background:#fff;color:#4d575d;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 14px #14202515;opacity:0;transition:opacity .15s}.splitter:hover .swap-button,.splitter:focus-within .swap-button{opacity:1}.phone-switcher{display:none}
-/* PDF surface */
-.pdf-shell{height:100%;display:flex;flex-direction:column;min-height:0;background:var(--canvas)}.pdf-bar{height:46px;min-height:46px;background:#f0f2f2;border-bottom:1px solid #dfe4e5;display:flex;align-items:center;justify-content:space-between;padding:0 17px;gap:10px}.pdf-file{display:flex;align-items:center;gap:9px;min-width:0}.pdf-file-icon{color:#707f87}.pdf-file-name{font-size:11px;color:#3e494c;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}.pdf-demo-tag{font-size:8px;font-weight:750;letter-spacing:.9px;color:#8b9799;border:1px solid #cbd2d4;padding:4px 5px;border-radius:3px}.pdf-utilities{display:flex;align-items:center;gap:4px}.plain-tool{border:0;background:transparent;width:34px;height:34px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#677278}.plain-tool:hover{background:#e0e5e5;color:#20282d}.pdf-stage{flex:1;min-height:0;overflow:auto;display:flex;align-items:flex-start;justify-content:center;background:linear-gradient(125deg,#e5e9ea,#ecf0ef);scrollbar-color:#c8cecd transparent;scrollbar-width:thin}.pdf-demo-zoom{width:100%;min-height:100%;display:flex;justify-content:center;padding:25px 22px 34px}.demo-page{background:var(--paper);color:#1f2830;width:610px;min-width:610px;min-height:790px;height:790px;box-shadow:0 13px 50px #53606618,0 1px 3px #53606615;padding:55px 64px 38px;position:relative;overflow:hidden;flex:none;transform-origin:top center}.demo-document-id{font-size:10px;color:#879096;font-weight:750;letter-spacing:2px;display:flex;align-items:center;justify-content:space-between}.demo-rule{height:1px;background:#dce2e5;margin-top:16px}.demo-section{font-size:11px;font-weight:750;letter-spacing:1px;color:#405bdb;margin-top:52px}.demo-title{font-size:34px;letter-spacing:-1.6px;font-weight:740;line-height:1.3;margin:13px 0 22px}.demo-lead{font-size:14px;color:#4f5b5e;line-height:1.85;letter-spacing:-.25px}.demo-equation{margin:30px 0;padding:23px 10px;text-align:center;background:#f4f6f8;font-size:24px;letter-spacing:-.8px;font-family:Georgia,"Times New Roman",serif}.demo-figure{height:160px;border-bottom:1px solid #b9c5cd;margin:27px 18px 22px;position:relative}.demo-figure svg{width:100%;height:100%}.demo-figcaption{font-size:11px;text-align:center;color:#8a959a}.demo-foot{position:absolute;bottom:35px;left:64px;right:64px;border-top:1px solid #e3e7e8;padding-top:13px;font-size:10px;display:flex;justify-content:space-between;color:#a0a8ac}.pdf-iframe{width:100%;height:100%;border:0;background:#fff;display:block}.pdf-iframe[hidden]{display:none!important}.pdf-controls{height:56px;min-height:56px;background:#f8f9f8;border-top:1px solid #dfe4e5;display:flex;justify-content:space-between;align-items:center;padding:0 14px;gap:8px}.pdf-control-group{display:flex;align-items:center;gap:5px}.control-icon{width:34px;height:34px;background:transparent;border:0;border-radius:6px;color:#3e4b51;font-size:18px;display:flex;align-items:center;justify-content:center}.control-icon:hover{background:#e7ebed}.page-count{font-size:12px;min-width:55px;text-align:center;color:#828d92;font-variant-numeric:tabular-nums}.page-count strong{color:#202b32;font-weight:750}.page-sep{margin:0 7px;color:#c1c8cb}.zoom-count{font-size:11px;color:#606c70;width:48px;text-align:center;font-variant-numeric:tabular-nums;font-weight:650}
-/* Study panel / no cards, typographic hierarchy */
-.study-shell{height:100%;display:flex;flex-direction:column;background:#fff;min-height:0}.study-topline{height:47px;min-height:47px;border-bottom:1px solid #eff1f2;display:flex;align-items:center;justify-content:space-between;gap:7px;padding:0 clamp(24px,4vw,55px);font-size:10px;letter-spacing:1.25px;color:#78848c;font-weight:750}.status-dot{display:inline-block;background:#738f82;width:6px;height:6px;border-radius:50%;margin:0 7px 1px 0}.reference-count{font-size:9px;letter-spacing:1.1px;color:#abb3b5;white-space:nowrap}.sample-label{font-size:9px;font-weight:500;letter-spacing:0;color:#b2babe}.study-scroll{height:100%;overflow:auto;min-height:0;padding:45px clamp(26px,5vw,72px) 55px;scrollbar-width:thin;scrollbar-color:#e1e5e7 transparent}.study-scroll>*{max-width:660px}.eyebrow{font-weight:740;letter-spacing:1.3px;color:var(--accent);font-size:10px}.eyebrow-divider{color:#c8cdd2;margin:0 6px}.main-title{font-size:clamp(30px,3.15vw,46px);line-height:1.25;letter-spacing:-2px;margin:19px 0 23px;font-weight:740;word-break:keep-all}.main-title em{font-style:normal;color:#67747b;font-weight:420}.lead{font-size:14px;line-height:2;letter-spacing:-.3px;color:#606c72;margin:0 0 49px;word-break:keep-all}.lead strong{color:#202c34;font-weight:730}.key-line{display:grid;grid-template-columns:32px minmax(0,1fr);gap:14px;padding:27px 0 31px;border-top:1px solid #e7eaec}.line-number{font-size:11px;color:#a9b3b7;font-weight:670;padding-top:4px;font-variant-numeric:tabular-nums}.key-line h2{font-size:15px;letter-spacing:-.5px;margin:0 0 14px;font-weight:760}.key-line p{font-size:13px;color:#69747a;line-height:1.92;letter-spacing:-.25px;margin:0;word-break:keep-all}.formula{color:#253351;background:#f3f5fb;padding:21px 11px;text-align:center;margin:0 0 16px;font-size:clamp(16px,1.8vw,21px);font-family:Georgia,"Times New Roman",serif;white-space:nowrap;overflow:auto}.formula-arrow{color:#8e9caa;margin:0 8px}.mono{font-family:Georgia,serif}.source-row{border-top:1px solid #e7eaec;border-bottom:1px solid #e7eaec;margin-top:10px;padding:16px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.source-row>span{font-size:11px;color:#9ea8aa;margin-right:auto}.source-row button,.text-cta{background:none;border:0;padding:6px 0;font-size:11px;font-weight:700;color:var(--accent)}.source-row button+button{margin-left:12px}.source-row button:hover,.text-cta:hover{text-decoration:underline}.note-warning{font-size:11px;line-height:1.8;color:#a4adaf;margin-top:25px}
-/* Quiz editor */
-.quiz-intro{padding-bottom:10px}.quiz-intro .lead{margin-bottom:35px}.quiz-item{border-top:1px solid #e8ecee;padding:30px 0 36px}.quiz-heading{display:flex;justify-content:space-between;gap:12px;color:#9ca6ab;font-size:10px;font-weight:700;letter-spacing:.9px;margin-bottom:17px}.quiz-question{margin:0 0 22px;font-size:16px;line-height:1.65;font-weight:720;letter-spacing:-.45px;word-break:keep-all}.choices{display:flex;flex-direction:column;gap:8px}.choice{display:flex;align-items:center;text-align:left;gap:11px;border:1px solid #e5e9ed;background:#fff;padding:13px 16px;min-height:45px;width:100%;color:#414e54;font-size:12px;line-height:1.5;transition:background .14s,border .14s}.choice:hover:not(:disabled){border-color:#a8b5eb;background:#f8f9ff}.choice[aria-pressed="true"]{background:#f2f5ff;border-color:#788ceb;color:#263c96}.choice-letter{font-weight:760;color:#94a0a4;width:18px;flex:none}.choice[aria-pressed="true"] .choice-letter{color:var(--accent)}.short-answer{width:100%;border:0;border-bottom:1px solid #bfc8cc;background:#fff;outline:none;border-radius:0;padding:14px 0;font-size:13px;color:var(--ink)}.short-answer:focus{border-color:var(--accent)}.quiz-actions{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:17px}.quiz-submit{border:0;border-radius:4px;background:#202936;color:white;padding:11px 18px;font-weight:650;font-size:12px;min-height:40px}.quiz-submit:hover:not(:disabled){background:#3e527c}.quiz-hint{font-size:10px;color:#a6afb4}.answer-feedback{margin-top:16px;padding:14px 16px;border-left:2px solid #7094dc;background:#f4f7fd;font-size:12px;line-height:1.8;color:#425268}.answer-feedback strong{display:block;color:#233954;margin-bottom:5px}.answer-feedback.good{border-color:#5a9a85;background:#f4faf6;color:#3e6558}.answer-feedback.review{border-color:#c79c53;background:#fdfaf1;color:#665437}.quiz-footer{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #e7eaec;padding:23px 0;color:#9aa5ab;font-size:11px}.toast{pointer-events:none;opacity:0;transform:translate(-50%,10px);position:fixed;bottom:82px;left:50%;z-index:30;border-radius:5px;background:#222c33;color:white;padding:11px 16px;font-size:12px;box-shadow:0 6px 24px #0003;transition:opacity .15s,transform .15s}.toast.show{opacity:1;transform:translate(-50%,0)}
-/* tablet portrait: exact same independent pane selectors, stacked, edge to edge */
-@media (orientation:portrait) and (min-width:671px) and (max-width:1200px){.workspace{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,var(--top)) 9px minmax(0,1fr)}.splitter{cursor:row-resize}.splitter:before{inset:-5px 0}.splitter-grip{flex-direction:row}.swap-button{top:50%;left:calc(50% + 40px);transform:translateY(-50%)}.demo-page{min-height:790px}.study-scroll{padding-top:32px;padding-bottom:32px}.main-title{font-size:36px}.pane-context{display:block}}
-@media (max-width:1050px){.session-bar{padding:0 17px}.session-tag{display:none}.pane-topbar{padding:0 14px}.pane-context{display:none}.study-scroll{padding-left:28px;padding-right:28px}.study-topline{padding:0 28px}.main-title{font-size:32px}.demo-page{width:540px;min-width:540px;height:750px;min-height:750px;padding-left:52px;padding-right:52px}}
-@media (max-width:670px){.session-bar{height:51px;min-height:51px;padding:0 15px;grid-template-columns:auto 1fr auto;gap:12px}.brand{font-size:20px}.brand-symbol{width:17px;height:19px;gap:2px}.brand-symbol i:nth-child(1){width:4px;height:10px}.brand-symbol i:nth-child(2){width:4px;height:16px}.brand-symbol i:nth-child(3){width:4px;height:13px}.lecture-title{font-size:11px}.session-stats{display:none}.workspace{display:block;flex:1;min-height:0;position:relative}.pane{position:absolute;inset:0;display:none}.pane.active-phone{display:flex}.splitter{display:none}.phone-switcher{display:flex;background:#fff;border-top:1px solid var(--line);height:53px;min-height:53px;padding-bottom:var(--safe-bottom)}.phone-side{flex:1;border:0;background:#fff;color:#9aa4a9;font-size:12px;font-weight:600}.phone-side.active{color:var(--ink);box-shadow:inset 0 2px 0 var(--accent)}.pane-topbar{height:49px;min-height:49px}.pane-label{font-size:9px}.pane-selector{font-size:14px}.study-topline{height:39px;min-height:39px;padding:0 23px;font-size:9px}.study-scroll{padding:27px 24px 32px}.main-title{font-size:32px}.lead{font-size:13px;margin-bottom:34px}.demo-page{width:510px;min-width:510px;min-height:710px;height:710px}.pdf-controls{height:50px;min-height:50px}.pdf-bar{height:44px;min-height:44px}.pdf-demo-zoom{padding:20px 18px}}
-@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:0s!important;transition-duration:0s!important;scroll-behavior:auto!important}}
-[hidden]{display:none!important}
-@media (hover:none){.swap-button{opacity:1}}
-
-/* v1.1: HTML file-preview resilience. Important content is pre-rendered in pane-body. */
-.phone-side{text-decoration:none;display:flex;align-items:center;justify-content:center}
-@media (max-width:670px){
-  html:not(.js-ready) #pane-left{display:flex}
-  html:not(.js-ready):has(#pane-right:target) #pane-left{display:none}
-  html:not(.js-ready) #pane-right:target{display:flex}
-  html:not(.js-ready):has(#pane-right:target) .phone-side{box-shadow:none;color:#9aa4a9}
-  html:not(.js-ready):has(#pane-right:target) .phone-side[href="#pane-right"]{color:var(--ink);box-shadow:inset 0 2px 0 var(--accent)}
-  .pdf-demo-zoom{padding:18px 12px 30px;min-width:0}
-  .demo-page{min-width:0;width:min(100%,500px);height:auto;min-height:640px;padding:38px 24px 60px}
-  .demo-title{font-size:25px;letter-spacing:-.8px}
-  .demo-foot{left:24px;right:24px}
-  .demo-equation{font-size:17px}
-  .demo-section{margin-top:28px}
-  .demo-figure{height:135px;margin:20px 0}
-  .pdf-stage{overscroll-behavior:contain}
-}
-
-
-
-/* FOLIO Workspace Dark / v1.2 — intentional full-screen dark system.
-   Stable markup and learning behavior from v1.1; no external requests. */
-:root{
-  color-scheme:dark;
-  --ink:#edf1fa;
-  --ink-soft:#c5cfdd;
-  --muted:#8794a8;
-  --line:#283242;
-  --accent:#93aaff;
-  --paper:#19212e;
-  --canvas:#0d131c;
-  --canvas-dark:#0b111a;
-  --nav:#151b25;
-  --bg:#0b0f16;
-  --surface:#131923;
-  --surface-high:#1a2230;
-  --surface-hover:#252f40;
-  --border-strong:#36445b;
-  --success:#8bdcba;
-  --warning:#f1c88c;
-}
-html,body,.app,.workspace{background:var(--bg);color:var(--ink)}
-body{color-scheme:dark}
-button,select,input{color:inherit}
-select option{color:var(--ink);background:var(--nav)}
-:focus-visible{outline-color:var(--accent)}
-/* Chrome/Safari scrollbars: soft, narrow, no bright strip */
-*{scrollbar-color:#354254 #101720;scrollbar-width:thin}
-*::-webkit-scrollbar{width:7px;height:7px}
-*::-webkit-scrollbar-track{background:#111722}
-*::-webkit-scrollbar-thumb{background:#344157;border-radius:8px}
-/* App chrome */
-.session-bar{background:#10151e;border-color:var(--line)}
-.brand,.lecture-title{color:#f3f6ff}
-.lecture-muted{color:#65748d}
-.session-tag{border-color:#334052;color:#94a2b7}
-.progress-mini{background:#2e394d}
-.progress-copy{color:#aebacf}
-.pane{background:#111720}
-.pane-topbar{background:#141b26;border-color:var(--line)}
-.pane-label,.pane-context{color:#94a1b5}
-.pane-selector{color:#f1f4fe;background:transparent}
-.select-chevron{color:#a6b4c7}
-.splitter{background:#222d3c}
-.splitter-grip i{background:#718097}
-.swap-button{background:#1a2534;border-color:#3b485c;color:#d9e3f4;box-shadow:0 4px 18px #0007}
-/* PDF working surface */
-.pdf-shell{background:var(--canvas)}
-.pdf-bar,.pdf-controls{background:#171e29;border-color:#2b3545}
-.pdf-file-icon,.pdf-file-name{color:#c4ccda}
-.pdf-demo-tag{color:#a1b4d0;border-color:#3f4d65;background:#202b3b}
-.plain-tool,.control-icon{color:#c0cee2}
-.plain-tool:hover,.control-icon:hover{background:#273449;color:#fff}
-.pdf-stage{background:linear-gradient(150deg,#0c121a 0%,#121b26 52%,#0d141e 100%);scrollbar-color:#45546a transparent}
-.demo-page{background:var(--paper);color:#edf2fb;box-shadow:0 14px 40px #0008,0 0 0 1px #354155}
-.demo-document-id{color:#9aaac0}
-.demo-rule{background:#344153}
-.demo-section{color:#a2b8ff}
-.demo-title{color:#f0f4ff}
-.demo-lead{color:#b7c4d6}
-.demo-equation{background:#222d40;color:#e7edff;border:1px solid #32415a}
-.demo-figure{border-color:#4a586e}
-.demo-figure svg line{stroke:#78889c}
-.demo-figure svg path{stroke:#9ab1ff}
-.demo-figcaption{color:#9baec7}
-.demo-foot{border-color:#354257;color:#93a3bb}
-.page-count,.zoom-count{color:#9daabe}
-.page-count strong{color:#f3f6ff}
-.page-sep{color:#69788d}
-/* In preview, local PDFs use a dark-reader filter; source fidelity can be toggled. */
-.pdf-iframe{background:#141b25;filter:invert(.91) hue-rotate(180deg)}
-.pdf-iframe.original-colors{filter:none}
-.plain-tool[data-action="toggle-pdf-colors"][aria-pressed="true"]{background:#2a3750;color:#a9bcff}
-/* AI explanation panel */
-.study-shell{background:#111720;color:#e9eef7}
-.study-topline{border-color:#293547;color:#94a3b9}
-.status-dot{background:#8fddbb}
-.reference-count,.sample-label{color:#91a0b5}
-.study-scroll{scrollbar-color:#354357 transparent}
-.eyebrow{color:#98b0ff}
-.eyebrow-divider{color:#5b6a83}
-.main-title{color:#f5f7fe}
-.main-title em{color:#aab9d0}
-.lead{color:#aab8cb}
-.lead strong{color:#e6edf8}
-.key-line,.source-row,.quiz-item,.quiz-footer{border-color:#2c3748}
-.line-number{color:#8292aa}
-.key-line h2{color:#eaf0fc}
-.key-line p{color:#aebbd0}
-.formula{color:#dce6ff;background:#1e293d;border:1px solid #34435c}
-.formula-arrow{color:#a4b8d6}
-.source-row>span{color:#92a4ba}
-.source-row button,.text-cta{color:#9eb4ff}
-.note-warning{color:#93a2b8}
-/* Quiz / decisions / feedback: contrast maintained for accessible reading */
-.quiz-heading{color:#97a7c0}
-.quiz-question{color:#edf1f9}
-.choice{color:#d5e0ee;background:#1a2230;border-color:#374359}
-.choice:hover:not(:disabled){border-color:#7187bf;background:#24314a}
-.choice[aria-pressed="true"]{color:#eef2ff;border-color:#a0b6ff;background:#283856}
-.choice-letter{color:#a1aec4}
-.choice[aria-pressed="true"] .choice-letter{color:#bed0ff}
-.short-answer{background:#141c28;color:#edf2fb;border-color:#57667d}
-.short-answer::placeholder{color:#7e8ca4}
-.short-answer:focus{border-color:#a0b8ff}
-.quiz-submit{background:#9db2ff;color:#0b1121;border-radius:5px}
-.quiz-submit:hover:not(:disabled){background:#b8c7ff;color:#0a1020}
-.quiz-submit:disabled{opacity:.58}
-.quiz-hint{color:#91a0b6}
-.answer-feedback{color:#c9d9f2;background:#1a2a44;border-color:#7aa3f2}
-.answer-feedback strong{color:#dbe9ff}
-.answer-feedback.good{color:#b7e5d0;background:#19372f;border-color:#80d4b2}
-.answer-feedback.good strong{color:#c8f5e0}
-.answer-feedback.review{color:#ead5af;background:#352b20;border-color:#e5b971}
-.answer-feedback.review strong{color:#ffe0ac}
-.quiz-footer{color:#9eaec5}
-.toast{background:#263348;color:#edf2fc;border:1px solid #3d5069;box-shadow:0 8px 30px #000a}
-@media(max-width:670px){
-  .phone-switcher{background:#111720;border-color:#2a3647}
-  .phone-side{color:#97a6bd;background:#111720}
-  .phone-side.active{color:#e3eaff;box-shadow:inset 0 2px 0 var(--accent)}
-  html:not(.js-ready):has(#pane-right:target) .phone-side{color:#97a6bd}
-  html:not(.js-ready):has(#pane-right:target) .phone-side[href="#pane-right"]{color:#e3eaff;box-shadow:inset 0 2px 0 var(--accent)}
-}
-
-</style>
+  <meta name="theme-color" content="#172932">
+  <title>FOLIO — Study Studio</title>
+  <link rel="stylesheet" href="styles/studio-v2.css">
 </head>
 <body>
 <div id="app" class="app">
@@ -189,7 +19,7 @@ select option{color:var(--ink);background:var(--nav)}
     <section class="pane pane-left" id="pane-left" aria-label="왼쪽 작업 화면">
       <div class="pane-topbar">
         <div class="pane-select-wrap"><span class="pane-label">왼쪽 화면</span><select class="pane-selector" aria-label="왼쪽에 표시할 화면" data-pane="left"><option value="pdf">PDF 원본</option><option value="notes">AI 설명</option><option value="quiz">확인문제</option></select><span class="select-chevron" aria-hidden="true">⌄</span></div>
-        <div class="pane-context" id="context-left">SOURCE DOCUMENT</div>
+        <div class="pane-context" id="context-left">PDF 원본</div>
       </div>
       <div class="pane-body" id="body-left"><div class="pdf-shell">
     <div class="pdf-bar"><div class="pdf-file"><svg class="pdf-file-icon" viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2.5h8l4 4v11H4z"/><path d="M12 2.5v4h4"/></svg><span class="pdf-file-name" data-pdf-name>Lecture_04.pdf</span><span class="pdf-demo-tag" data-demo-badge>DEMO</span></div><div class="pdf-utilities"><button type="button" class="plain-tool upload-trigger" data-action="upload-pdf" aria-label="PDF 파일 열기" title="내 기기의 PDF 파일 열기"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V3m-5 5 5-5 5 5M4 17v3h16v-3"/></svg></button><button type="button" class="plain-tool" data-action="toggle-pdf-colors" title="PDF 원본 색상 전환" aria-label="PDF 원본 색상 전환" aria-pressed="false" hidden>◐</button><button type="button" class="plain-tool" data-action="fit-pdf" title="PDF 맞춤 보기" aria-label="PDF 맞춤 보기"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button></div></div>
@@ -204,9 +34,9 @@ select option{color:var(--ink);background:var(--nav)}
     <section class="pane pane-right" id="pane-right" aria-label="오른쪽 작업 화면">
       <div class="pane-topbar">
         <div class="pane-select-wrap"><span class="pane-label">오른쪽 화면</span><select class="pane-selector" aria-label="오른쪽에 표시할 화면" data-pane="right"><option value="pdf">PDF 원본</option><option value="notes" selected>AI 설명</option><option value="quiz">확인문제</option></select><span class="select-chevron" aria-hidden="true">⌄</span></div>
-        <div class="pane-context" id="context-right">STUDY NOTES</div>
+        <div class="pane-context" id="context-right">학습 설명</div>
       </div>
-      <div class="pane-body" id="body-right"><div class="study-shell notes-shell"><div class="study-topline"><span><span class="status-dot"></span>AI STUDY NOTES <span class="sample-label">· 예시 콘텐츠</span></span><span class="reference-count">PDF 12–14</span></div><div class="study-scroll"><div class="eyebrow">CHAPTER 04 <span class="eyebrow-divider">/</span> 핵심 개념</div><h1 class="main-title">푸리에 변환의<br><em>시간 이동 성질</em></h1><p class="lead">신호가 시간축에서 이동하면, 주파수 영역에서는 크기가 아닌 <strong>위상</strong>이 달라집니다.</p><div class="key-line"><span class="line-number">01</span><div><h2>핵심 공식</h2><div class="formula">x(t − t₀) <span class="formula-arrow">⟷</span> X(ω)e<sup>−jωt₀</sup></div><p>시간축에서 <span class="mono">t₀</span>만큼 지연되면 주파수 영역의 원래 스펙트럼에 복소 지수항이 곱해집니다.</p></div></div><div class="key-line"><span class="line-number">02</span><div><h2>이해해야 할 점</h2><p>복소 지수항의 크기는 1이므로 진폭 스펙트럼은 변하지 않습니다. 대신 주파수에 비례하는 선형 위상 성분이 더해집니다.</p></div></div><div class="key-line"><span class="line-number">03</span><div><h2>자주 틀리는 부분</h2><p>시간 지연과 주파수 이동은 서로 다른 연산입니다. 부호가 <strong>음수인지 양수인지</strong> 변환쌍에 대입해 확인해 보세요.</p></div></div><div class="source-row"><span>출처</span><button type="button" data-action="source-page" data-target-page="12">PDF 12쪽 열기 <span aria-hidden="true">↗</span></button><button type="button" data-action="open-quiz">확인문제 풀기 <span aria-hidden="true">↗</span></button></div><div class="note-warning">시연용 예시입니다. 실제 PDF를 올려도 AI 분석은 실행되지 않습니다.</div></div></div></div>
+      <div class="pane-body" id="body-right"><div class="study-shell notes-shell"><div class="study-topline"><span><span class="status-dot"></span>학습 설명 <span class="sample-label">· 예시 콘텐츠</span></span><span class="reference-count">PDF 12–14</span></div><div class="study-scroll"><div class="eyebrow">4강 <span class="eyebrow-divider">/</span> 핵심 개념</div><h1 class="main-title">푸리에 변환의<br><em>시간 이동 성질</em></h1><p class="lead">신호가 시간축에서 이동하면, 주파수 영역에서는 크기가 아닌 <strong>위상</strong>이 달라집니다.</p><div class="key-line"><span class="line-number">01</span><div><h2>핵심 공식</h2><div class="formula">x(t − t₀) <span class="formula-arrow">⟷</span> X(ω)e<sup>−jωt₀</sup></div><p>시간축에서 <span class="mono">t₀</span>만큼 지연되면 주파수 영역의 원래 스펙트럼에 복소 지수항이 곱해집니다.</p></div></div><div class="key-line"><span class="line-number">02</span><div><h2>이해해야 할 점</h2><p>복소 지수항의 크기는 1이므로 진폭 스펙트럼은 변하지 않습니다. 대신 주파수에 비례하는 선형 위상 성분이 더해집니다.</p></div></div><div class="key-line"><span class="line-number">03</span><div><h2>자주 틀리는 부분</h2><p>시간 지연과 주파수 이동은 서로 다른 연산입니다. 부호가 <strong>음수인지 양수인지</strong> 변환쌍에 대입해 확인해 보세요.</p></div></div><div class="source-row"><span>출처</span><button type="button" data-action="source-page" data-target-page="12">PDF 12쪽 열기 <span aria-hidden="true">↗</span></button><button type="button" data-action="open-quiz">확인문제 풀기 <span aria-hidden="true">↗</span></button></div><div class="note-warning">시연용 예시입니다. 실제 PDF를 올려도 AI 분석은 실행되지 않습니다.</div></div></div></div>
     </section>
   </main>
 
@@ -225,17 +55,17 @@ select option{color:var(--ink);background:var(--nav)}
   </div>
 </template>
 <template id="template-notes">
-  <div class="study-shell notes-shell"><div class="study-topline"><span><span class="status-dot"></span>AI STUDY NOTES <span class="sample-label">· 예시 콘텐츠</span></span><span class="reference-count">PDF 12–14</span></div><div class="study-scroll"><div class="eyebrow">CHAPTER 04 <span class="eyebrow-divider">/</span> 핵심 개념</div><h1 class="main-title">푸리에 변환의<br><em>시간 이동 성질</em></h1><p class="lead">신호가 시간축에서 이동하면, 주파수 영역에서는 크기가 아닌 <strong>위상</strong>이 달라집니다.</p><div class="key-line"><span class="line-number">01</span><div><h2>핵심 공식</h2><div class="formula">x(t − t₀) <span class="formula-arrow">⟷</span> X(ω)e<sup>−jωt₀</sup></div><p>시간축에서 <span class="mono">t₀</span>만큼 지연되면 주파수 영역의 원래 스펙트럼에 복소 지수항이 곱해집니다.</p></div></div><div class="key-line"><span class="line-number">02</span><div><h2>이해해야 할 점</h2><p>복소 지수항의 크기는 1이므로 진폭 스펙트럼은 변하지 않습니다. 대신 주파수에 비례하는 선형 위상 성분이 더해집니다.</p></div></div><div class="key-line"><span class="line-number">03</span><div><h2>자주 틀리는 부분</h2><p>시간 지연과 주파수 이동은 서로 다른 연산입니다. 부호가 <strong>음수인지 양수인지</strong> 변환쌍에 대입해 확인해 보세요.</p></div></div><div class="source-row"><span>출처</span><button type="button" data-action="source-page" data-target-page="12">PDF 12쪽 열기 <span aria-hidden="true">↗</span></button><button type="button" data-action="open-quiz">확인문제 풀기 <span aria-hidden="true">↗</span></button></div><div class="note-warning">시연용 예시입니다. 실제 PDF를 올려도 AI 분석은 실행되지 않습니다.</div></div></div>
+  <div class="study-shell notes-shell"><div class="study-topline"><span><span class="status-dot"></span>학습 설명 <span class="sample-label">· 예시 콘텐츠</span></span><span class="reference-count">PDF 12–14</span></div><div class="study-scroll"><div class="eyebrow">4강 <span class="eyebrow-divider">/</span> 핵심 개념</div><h1 class="main-title">푸리에 변환의<br><em>시간 이동 성질</em></h1><p class="lead">신호가 시간축에서 이동하면, 주파수 영역에서는 크기가 아닌 <strong>위상</strong>이 달라집니다.</p><div class="key-line"><span class="line-number">01</span><div><h2>핵심 공식</h2><div class="formula">x(t − t₀) <span class="formula-arrow">⟷</span> X(ω)e<sup>−jωt₀</sup></div><p>시간축에서 <span class="mono">t₀</span>만큼 지연되면 주파수 영역의 원래 스펙트럼에 복소 지수항이 곱해집니다.</p></div></div><div class="key-line"><span class="line-number">02</span><div><h2>이해해야 할 점</h2><p>복소 지수항의 크기는 1이므로 진폭 스펙트럼은 변하지 않습니다. 대신 주파수에 비례하는 선형 위상 성분이 더해집니다.</p></div></div><div class="key-line"><span class="line-number">03</span><div><h2>자주 틀리는 부분</h2><p>시간 지연과 주파수 이동은 서로 다른 연산입니다. 부호가 <strong>음수인지 양수인지</strong> 변환쌍에 대입해 확인해 보세요.</p></div></div><div class="source-row"><span>출처</span><button type="button" data-action="source-page" data-target-page="12">PDF 12쪽 열기 <span aria-hidden="true">↗</span></button><button type="button" data-action="open-quiz">확인문제 풀기 <span aria-hidden="true">↗</span></button></div><div class="note-warning">시연용 예시입니다. 실제 PDF를 올려도 AI 분석은 실행되지 않습니다.</div></div></div>
 </template>
 <template id="template-quiz">
-  <div class="study-shell quiz-shell"><div class="study-topline"><span><span class="status-dot"></span>CHECK YOUR UNDERSTANDING <span class="sample-label">· 예시 문제</span></span><span class="reference-count">4 QUESTIONS</span></div><div class="study-scroll"><div class="quiz-intro"><span class="eyebrow">PDF 12–14 / QUICK CHECK</span><h1 class="main-title">이해했는지<br><em>확인해 보세요.</em></h1><p class="lead">한 문제씩 답을 제출하면 바로 정답과 해설이 표시됩니다.</p></div><div class="quiz-items" data-quiz-items></div><div class="quiz-footer"><span data-quiz-progress>0 / 4 완료</span><button type="button" data-action="reset-quiz" class="text-cta">다시 풀기 <span aria-hidden="true">↻</span></button></div></div></div>
+  <div class="study-shell quiz-shell"><div class="study-topline"><span><span class="status-dot"></span>이해도 점검 <span class="sample-label">· 예시 문제</span></span><span class="reference-count">4 QUESTIONS</span></div><div class="study-scroll"><div class="quiz-intro"><span class="eyebrow">PDF 12–14 / QUICK CHECK</span><h1 class="main-title">이해했는지<br><em>확인해 보세요.</em></h1><p class="lead">한 문제씩 답을 제출하면 바로 정답과 해설이 표시됩니다.</p></div><div class="quiz-items" data-quiz-items></div><div class="quiz-footer"><span data-quiz-progress>0 / 4 완료</span><button type="button" data-action="reset-quiz" class="text-cta">다시 풀기 <span aria-hidden="true">↻</span></button></div></div></div>
 </template>
 <script>
 /* FOLIO study workspace — local-only interactive prototype.
    No requests, analytics, login, AI calls or user-file uploads occur. */
 (()=>{
 'use strict';
-const S={mode:{left:'pdf',right:'notes'},phoneSide:'left',page:12,total:42,zoom:1,pdfUrl:null,pdfFileName:null,pdfOriginalColors:false,answer:{},submitted:{},leftPercent:57,topPercent:53};
+const S={mode:{left:'pdf',right:'notes'},phoneSide:'left',page:12,total:42,zoom:1,pdfUrl:null,pdfFileName:null,pdfOriginalColors:true,uploadFromSide:null,pdfSelectionVersion:0,answer:{},submitted:{},leftPercent:57,topPercent:53};
 const Q=[
  {id:0,kind:'multiple',title:'시간 영역에서 신호가 지연되면 주파수 영역에서 무엇이 달라지나요?',choices:['진폭 스펙트럼이 0이 됩니다.','위상이 주파수에 비례해 변합니다.','모든 주파수가 두 배가 됩니다.','신호의 평균값이 항상 증가합니다.'],correct:1,explain:'시간 이동은 X(ω)에 e^(−jωt₀)를 곱하므로 진폭은 유지되지만 위상은 바뀝니다.'},
  {id:1,kind:'multiple',title:'x(t − t₀)의 푸리에 변환으로 올바른 식은 무엇인가요?',choices:['X(ω + t₀)','X(ω) + t₀','X(ω)e^(−jωt₀)','X(ω)e^(+t₀)'],correct:2,explain:'시간 지연 t₀의 변환쌍은 X(ω)e^(−jωt₀)입니다.'},
@@ -245,7 +75,7 @@ const Q=[
 const $=(s,root=document)=>root.querySelector(s);
 const $$=(s,root=document)=>Array.from(root.querySelectorAll(s));
 function escapeText(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-const labels={pdf:'SOURCE DOCUMENT',notes:'STUDY NOTES',quiz:'PRACTICE / REVIEW'};
+const labels={pdf:'PDF 원본',notes:'학습 설명',quiz:'확인문제'};
 let toastHandle=null;
 function toast(text){const n=$('#toast');n.textContent=text;n.classList.add('show');clearTimeout(toastHandle);toastHandle=setTimeout(()=>n.classList.remove('show'),2600);}
 function getDemoPage(page){
@@ -254,13 +84,32 @@ function getDemoPage(page){
  const desc=page===12?'신호를 시간축에서 이동시키면 주파수 영역에는 선형적인 위상 변화가 생깁니다.':page===13?'복소 지수함수는 크기 1인 성분이며 위상 변화만 나타냅니다.':'다양한 신호 변환을 분석할 때 변환쌍의 부호와 변수에 주의해야 합니다.';
  return `<div class="demo-document-id"><span>FOLIO · SIGNALS AND SYSTEMS</span><span>LECTURE 04</span></div><div class="demo-rule"></div><div class="demo-section">04 / FOURIER TRANSFORM</div><h2 class="demo-title">${heading}</h2><p class="demo-lead">${desc}<br>아래는 실제 강의자료가 아닌 시연용 내용입니다.</p><div class="demo-equation">x(t − t₀) &nbsp; ⟷ &nbsp; X(ω)e<sup>−jωt₀</sup></div><div class="demo-figure"><svg viewBox="0 0 470 160" aria-hidden="true" preserveAspectRatio="none"><line x1="0" y1="103" x2="470" y2="103" stroke="#78889c" stroke-width="1"/><line x1="235" y1="16" x2="235" y2="148" stroke="#78889c" stroke-width="1"/><path d="M0 103 C30 103 42 100 65 89 C86 77 100 54 120 49 C141 45 154 74 170 90 C182 100 199 103 235 103 C265 103 281 100 301 90 C316 82 337 62 355 55 C379 47 402 77 420 91 C435 101 450 103 470 103" stroke="#9ab1ff" stroke-width="2.3" fill="none"/><path d="M0 103 C64 103 67 104 86 103 C106 101 111 96 130 90 C151 82 162 61 184 55 C205 47 225 75 241 88 C260 101 278 103 307 103 C341 103 356 101 375 91 C392 82 412 62 435 52 C446 49 462 54 470 58" stroke="#a3abb8" stroke-width="1.7" stroke-dasharray="6 6" fill="none"/></svg></div><div class="demo-figcaption">Figure ${page===12?'4.2':'4.'+(page%7+1)} — 시간 이동된 신호의 표현 (시연용)</div><div class="demo-foot"><span>Department of Electrical Engineering</span><span>${page} / 42</span></div>`;
 }
+function syncPdfZoomControls(root){
+ const out=$('[data-action="zoom-out"]',root),zoomIn=$('[data-action="zoom-in"]',root);
+ if(out)out.disabled=S.zoom<=.7;
+ if(zoomIn)zoomIn.disabled=S.zoom>=1.6;
+}
+function togglePdfColors(){
+ S.pdfOriginalColors=!S.pdfOriginalColors;
+ for(const side of ['left','right'])if(S.mode[side]==='pdf'){
+  const root=$('#body-'+side);
+  const control=$('[data-action="toggle-pdf-colors"]',root),frame=$('[data-pdf-iframe]',root);
+  if(control){
+   control.setAttribute('aria-pressed',String(S.pdfOriginalColors));
+   control.title=S.pdfOriginalColors?'PDF 다크 보기':'PDF 원본 색상 보기';
+  }
+  if(frame)frame.classList.toggle('original-colors',S.pdfOriginalColors);
+ }
+ toast(S.pdfOriginalColors?'원본 PDF 색상':'다크 PDF 보기');
+}
 function renderPdf(side){const root=$('#body-'+side);root.replaceChildren($('#template-pdf').content.cloneNode(true));
  const pdfName=$('[data-pdf-name]',root),badge=$('[data-demo-badge]',root),iframe=$('[data-pdf-iframe]',root),demo=$('[data-demo-zoom]',root);
  pdfName.textContent=S.pdfFileName||'Lecture_04.pdf';badge.hidden=!!S.pdfUrl;
  const colorControl=$('[data-action="toggle-pdf-colors"]',root);
  if(colorControl){colorControl.hidden=!S.pdfUrl;colorControl.setAttribute('aria-pressed',String(S.pdfOriginalColors));colorControl.title=S.pdfOriginalColors?'PDF 다크 보기':'PDF 원본 색상 보기';}
- if(S.pdfUrl){demo.hidden=true;iframe.hidden=false;iframe.classList.toggle('original-colors',S.pdfOriginalColors);iframe.src=S.pdfUrl+'#page='+S.page+'&zoom='+Math.round(S.zoom*100);}else{iframe.hidden=true;demo.hidden=false;demo.style.zoom=String(S.zoom);$('[data-demo-page]',root).innerHTML=getDemoPage(S.page);}
+ if(S.pdfUrl){demo.hidden=true;iframe.hidden=false;iframe.classList.toggle('original-colors',S.pdfOriginalColors);iframe.src=S.pdfUrl+'#page='+S.page+'&zoom='+Math.round(S.zoom*100);}else{iframe.hidden=true;demo.hidden=false;demo.style.zoom=String(S.zoom);demo.style.width=Math.round(S.zoom*100)+'%';$('[data-demo-page]',root).innerHTML=getDemoPage(S.page);}
  $('[data-page-now]',root).textContent=String(S.page);$('[data-page-total]',root).textContent=S.pdfUrl?'—':String(S.total);$('[data-zoom-count]',root).textContent=Math.round(S.zoom*100)+'%';
+ syncPdfZoomControls(root);
 }
 function renderUnavailable(side,view){const root=$('#body-'+side);root.innerHTML=`<div class="study-shell"><div class="study-topline"><span>LOCAL DOCUMENT</span></div><div class="study-scroll"><div class="eyebrow">PREVIEW MODE</div><h1 class="main-title">분석되지 않은<br><em>PDF 자료입니다.</em></h1><p class="lead">현재는 화면 구조를 검토하는 로컬 프로토타입입니다. 방금 선택한 PDF는 기기 안에서만 열리며 AI 설명이나 확인문제는 생성되지 않습니다.</p><div class="key-line"><span class="line-number">—</span><div><h2>데이터 전송 없음</h2><p>외부 AI, 인증, 서버, 저장소에 파일을 보내지 않습니다. 실제 ${view==='notes'?'설명 생성':'문제 생성'}은 아직 연결되지 않았습니다.</p></div></div><div class="source-row"><button type="button" data-action="show-pdf">PDF 원본 열기 ↗</button></div></div></div>`;}
 function renderNotes(side){if(S.pdfUrl){renderUnavailable(side,'notes');return;}$('#body-'+side).replaceChildren($('#template-notes').content.cloneNode(true));}
@@ -271,8 +120,55 @@ function renderQuiz(side){if(S.pdfUrl){renderUnavailable(side,'quiz');return;}co
 function renderPane(side){const mode=S.mode[side];const sel=$(`.pane-selector[data-pane="${side}"]`);sel.value=mode;$('#context-'+side).textContent=labels[mode];if(mode==='pdf')renderPdf(side);else if(mode==='notes')renderNotes(side);else renderQuiz(side);}
 function renderBoth(){renderPane('left');renderPane('right');$('#globalProgressLabel').textContent=S.page+' / '+S.total;$('#globalProgress').style.width=Math.min(100,(S.page/S.total)*100)+'%';}
 function setMode(side,mode){if(!['pdf','notes','quiz'].includes(mode))return;S.mode[side]=mode;renderPane(side);}
-function pdfChangePage(delta){S.page=Math.max(1,Math.min(S.pdfUrl?1000:S.total,S.page+delta));for(const side of ['left','right'])if(S.mode[side]==='pdf')renderPdf(side);$('#globalProgressLabel').textContent=S.pdfUrl?S.page+'쪽':S.page+' / '+S.total;$('#globalProgress').style.width=Math.min(100,S.page/S.total*100)+'%';}
-function pdfZoom(diff){S.zoom=Math.max(.7,Math.min(1.6,Math.round((S.zoom+diff)*10)/10));for(const side of ['left','right'])if(S.mode[side]==='pdf')renderPdf(side);}
+function pdfChangePage(delta){
+ const next=Math.max(1,Math.min(S.pdfUrl?1000:S.total,S.page+delta));
+ const changed=next!==S.page;
+ S.page=next;
+ if(changed)for(const side of ['left','right'])if(S.mode[side]==='pdf'){
+  const root=$('#body-'+side);
+  const now=$('[data-page-now]',root);
+  if(!now){renderPdf(side);continue;}
+  now.textContent=String(S.page);
+  if(S.pdfUrl){
+   // Keep the native PDF iframe and the focused page button mounted.
+   const frame=$('[data-pdf-iframe]',root);
+   if(frame)frame.src=S.pdfUrl+'#page='+S.page+'&zoom='+Math.round(S.zoom*100);
+  }else{
+   const stage=$('[data-pdf-stage]',root),page=$('[data-demo-page]',root);
+   if(page)page.innerHTML=getDemoPage(S.page);
+   if(stage){stage.scrollTop=0;stage.scrollLeft=0;}
+  }
+ }
+ $('#globalProgressLabel').textContent=S.pdfUrl?S.page+'쪽':S.page+' / '+S.total;
+ $('#globalProgress').style.width=Math.min(100,S.page/S.total*100)+'%';
+}
+function setPdfZoom(value){
+ const next=Math.max(.7,Math.min(1.6,Math.round(value*10)/10));
+ if(next===S.zoom)return;
+ const ratio=next/S.zoom;
+ S.zoom=next;
+ for(const side of ['left','right'])if(S.mode[side]==='pdf'){
+  const root=$('#body-'+side);
+  const stage=$('[data-pdf-stage]',root);
+  if(!stage){renderPdf(side);continue;}
+  if(S.pdfUrl){
+   // Native PDF viewers own their internal scroll position; update only the fragment.
+   const frame=$('[data-pdf-iframe]',root);
+   if(frame)frame.src=S.pdfUrl+'#page='+S.page+'&zoom='+Math.round(next*100);
+  }else{
+   // Keep the synthetic document and its reading position while scaling.
+   const oldTop=stage.scrollTop,oldLeft=stage.scrollLeft;
+   const viewer=$('[data-demo-zoom]',root);
+   if(viewer){viewer.style.zoom=String(next);viewer.style.width=Math.round(next*100)+'%';}
+   stage.scrollTop=oldTop*ratio;
+   stage.scrollLeft=oldLeft*ratio;
+  }
+  const label=$('[data-zoom-count]',root);
+  if(label)label.textContent=Math.round(next*100)+'%';
+  syncPdfZoomControls(root);
+ }
+}
+function pdfZoom(diff){setPdfZoom(S.zoom+diff);}
 function setPhoneSide(side){
   if(!['left','right'].includes(side))return;
   S.phoneSide=side;
@@ -290,15 +186,64 @@ function setTop(pct){S.topPercent=Math.max(30,Math.min(70,pct));$('#workspace').
 function portrait(){return window.matchMedia('(orientation: portrait) and (min-width: 671px) and (max-width: 1200px)').matches;}
 function updateSeparator(){const sep=$('#splitter');sep.setAttribute('aria-orientation',portrait()?'horizontal':'vertical');sep.setAttribute('aria-valuenow',String(Math.round(portrait()?S.topPercent:S.leftPercent)));}
 function swap(){[S.mode.left,S.mode.right]=[S.mode.right,S.mode.left];renderBoth();toast('좌우 화면을 교환했습니다.');}
-async function loadFile(file){if(!file)return;if(file.type!=='application/pdf'&&!/\.pdf$/i.test(file.name)){toast('PDF 파일을 선택해 주세요.');return;}if(file.size>20*1024*1024){toast('승인된 시험 한도에 따라 PDF는 20MB 이하여야 합니다.');return;}if(S.pdfUrl)URL.revokeObjectURL(S.pdfUrl);S.pdfUrl=URL.createObjectURL(file);S.pdfFileName=file.name;S.page=1;S.zoom=1;renderBoth();toast('PDF가 기기 안에서 열렸습니다. 외부 전송은 하지 않았습니다.');}
-function sourcePage(pane,page){const opposite=pane==='left'?'right':'left';S.page=page;setMode(opposite,'pdf');pdfChangePage(0);revealPhoneSide(opposite);toast(`${page}쪽 PDF를 ${opposite==='left'?'왼쪽':'오른쪽'} 화면에 표시합니다.`);}
+function focusPdfUpload(side){
+ if(!['left','right'].includes(side))return;
+ $('[data-action="upload-pdf"]',$('#body-'+side))?.focus();
+}
+async function loadFile(file,fromSide=null){
+ const version=++S.pdfSelectionVersion;
+ if(!file){focusPdfUpload(fromSide);return;}
+ if(file.type!=='application/pdf'&&!/\.pdf$/i.test(file.name)){
+  focusPdfUpload(fromSide);toast('PDF 파일을 선택해 주세요.');return;
+ }
+ if(!file.size||file.size>20*1024*1024){
+  focusPdfUpload(fromSide);toast('PDF 파일은 1바이트 이상, 20MB 이하여야 합니다.');return;
+ }
+ // Only inspect a small local header; do not upload the document.
+ let validHeader=false;
+ try{
+  const prefix=new Uint8Array(await file.slice(0,1024).arrayBuffer());
+  for(let i=0;i<=prefix.length-5;i++){
+   if(prefix[i]===37&&prefix[i+1]===80&&prefix[i+2]===68&&prefix[i+3]===70&&prefix[i+4]===45){
+    validHeader=true;break;
+   }
+  }
+ }catch{
+  if(version!==S.pdfSelectionVersion)return;
+  focusPdfUpload(fromSide);toast('PDF 파일을 읽을 수 없습니다.');return;
+ }
+ // A later choice or cancellation invalidates this asynchronous header read.
+ if(version!==S.pdfSelectionVersion)return;
+ if(!validHeader){
+  focusPdfUpload(fromSide);toast('PDF 파일의 형식이 올바르지 않습니다.');return;
+ }
+ let url;
+ try{url=URL.createObjectURL(file);}catch{
+  focusPdfUpload(fromSide);toast('PDF를 기기에서 열 수 없습니다.');return;
+ }
+ const previous=S.pdfUrl;
+ S.pdfUrl=url;S.pdfFileName=file.name;S.page=1;S.zoom=1;
+ renderBoth();
+ // Rebuild succeeds before releasing the old locally created URL.
+ if(previous)URL.revokeObjectURL(previous);
+ focusPdfUpload(fromSide);
+ toast('PDF가 기기 안에서 열렸습니다. 외부 전송은 하지 않았습니다.');
+}
+function sourcePage(pane,page){const opposite=pane==='left'?'right':'left';pdfChangePage(page-S.page);setMode(opposite,'pdf');revealPhoneSide(opposite);toast(`${S.page}쪽 PDF를 ${opposite==='left'?'왼쪽':'오른쪽'} 화면에 표시합니다.`);}
 function quizChangeAnswer(qid,answer){if(S.submitted[qid])return;S.answer[qid]=answer;for(const side of ['left','right'])if(S.mode[side]==='quiz'){const root=$('#body-'+side),el=$(`[data-q-item="${qid}"]`,root);if(!el)continue;if(typeof answer==='number'){$$('.choice',el).forEach(c=>c.setAttribute('aria-pressed',String(Number(c.dataset.choice)===answer)));}else{const input=$('.short-answer',el);if(input&&document.activeElement!==input)input.value=answer;}}}
 function quizSubmit(qid){const q=Q[qid];if(S.answer[qid]===undefined||S.answer[qid]===''){toast('먼저 답안을 입력해 주세요.');return;}S.submitted[qid]=true;for(const side of ['left','right'])if(S.mode[side]==='quiz'){const prev=$('.study-scroll',$('#body-'+side))?.scrollTop||0;renderQuiz(side);const nextScroll=$('.study-scroll',$('#body-'+side));if(nextScroll)nextScroll.scrollTop=prev;}toast(q.kind==='short'?'해설을 확인해 주세요. 자동 채점은 연결 전입니다.':'문항 해설을 표시했습니다.');}
 function quizReset(){S.answer={};S.submitted={};for(const side of ['left','right'])if(S.mode[side]==='quiz')renderQuiz(side);toast('시연용 답안을 초기화했습니다.');}
 function handleAction(action,target){const side=target.closest('.pane')?.id?.replace('pane-','')||'left';switch(action){
- case 'upload-pdf':$('[data-pdf-input]',target.closest('.pane')).click();break;
- case 'toggle-pdf-colors':S.pdfOriginalColors=!S.pdfOriginalColors;for(const p of ['left','right'])if(S.mode[p]==='pdf')renderPdf(p);toast(S.pdfOriginalColors?'원본 PDF 색상':'다크 PDF 보기');break;
- case 'fit-pdf':S.zoom=1;for(const p of ['left','right'])if(S.mode[p]==='pdf')renderPdf(p);break;
+ case 'upload-pdf':{
+  const input=$('[data-pdf-input]',target.closest('.pane'));
+  if(!input)break;
+  S.uploadFromSide=side;
+  // Re-selecting the same file must dispatch change after a rejected choice.
+  input.value='';
+  input.click();break;
+ }
+ case 'toggle-pdf-colors':togglePdfColors();break;
+ case 'fit-pdf':setPdfZoom(1);break;
  case 'prev-page':pdfChangePage(-1);break;case 'next-page':pdfChangePage(1);break;
  case 'zoom-in':pdfZoom(.1);break;case 'zoom-out':pdfZoom(-.1);break;
  case 'source-page':sourcePage(side,Number(target.dataset.targetPage||12));break;
@@ -308,7 +253,21 @@ function handleAction(action,target){const side=target.closest('.pane')?.id?.rep
  case 'reset-quiz':quizReset();break;
  }}
 document.addEventListener('click',ev=>{const t=ev.target.closest('[data-action]');if(t){handleAction(t.dataset.action,t);return;}const ch=ev.target.closest('[data-choice]');if(ch){quizChangeAnswer(Number(ch.dataset.question),Number(ch.dataset.choice));return;}const ph=ev.target.closest('.phone-side');if(ph){ev.preventDefault();setPhoneSide(ph.dataset.side);}});
-document.addEventListener('change',ev=>{const t=ev.target;if(t.classList.contains('pane-selector'))setMode(t.dataset.pane,t.value);if(t.matches('[data-pdf-input]'))loadFile(t.files?.[0]);});
+document.addEventListener('change',ev=>{const t=ev.target;if(t.classList.contains('pane-selector'))setMode(t.dataset.pane,t.value);if(t.matches('[data-pdf-input]')){
+  const side=S.uploadFromSide;
+  S.uploadFromSide=null;
+  loadFile(t.files?.[0],side);
+}});
+document.addEventListener('cancel',ev=>{
+ const input=ev.target;
+ if(!input.matches?.('[data-pdf-input]'))return;
+ const side=input.closest('.pane')?.id?.replace('pane-','');
+ if(side!==S.uploadFromSide)return;
+ S.uploadFromSide=null;
+ ++S.pdfSelectionVersion;
+ input.value='';
+ focusPdfUpload(side);
+},true);
 document.addEventListener('input',ev=>{const t=ev.target;if(t.matches('.short-answer'))quizChangeAnswer(Number(t.dataset.question),t.value);});
 $('#swapPanes').addEventListener('click',ev=>{ev.stopPropagation();swap();});
 const spl=$('#splitter');let dragging=false;

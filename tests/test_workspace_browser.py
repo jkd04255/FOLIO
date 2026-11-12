@@ -165,10 +165,595 @@ class WorkspaceBrowserTests(unittest.TestCase):
             "mimeType": "application/pdf",
             "buffer": synthetic_pdf(),
         })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'synthetic.pdf'
+        """)
         self.assertEqual("synthetic.pdf", page.locator('#pane-left [data-pdf-name]').inner_text())
         self.assertTrue(page.locator('#pane-left [data-pdf-iframe]').get_attribute("src").startswith("blob:"))
         page.locator('#pane-right select[data-pane="right"]').select_option("notes")
         self.assertIn("분석되지 않은", page.locator('#pane-right .main-title').inner_text())
+        self.assert_clean(ext, errors)
+
+
+    def test_studio_v2_stylesheet_replaces_legacy_appearance(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        self.assertEqual(0, page.locator("head style").count())
+        self.assertEqual("styles/studio-v2.css", page.locator('link[rel="stylesheet"]').get_attribute("href"))
+        self.assertTrue(page.evaluate("""
+            () => [...document.styleSheets].some(s => (s.href || '').endsWith('/styles/studio-v2.css'))
+        """))
+        self.assertEqual("rgb(23, 41, 50)", page.locator(".session-bar").evaluate(
+            "(el) => getComputedStyle(el).backgroundColor"
+        ))
+        self.assertEqual("rgb(255, 255, 255)", page.locator(".study-shell").first.evaluate(
+            "(el) => getComputedStyle(el).backgroundColor"
+        ))
+        self.assertEqual("FOLIO — Study Studio", page.title())
+        self.assert_clean(ext, errors)
+
+    def test_studio_responsive_workspace_without_document_overflow(self):
+        for width, height in ((320, 720), (390, 844), (670, 900),
+                              (768, 1024), (1024, 768), (1366, 1024)):
+            with self.subTest(viewport=(width, height)):
+                page, ext, errors = self.open_workspace(width, height)
+                metrics = page.evaluate("""() => ({
+                    documentWidth: document.documentElement.scrollWidth,
+                    windowWidth: innerWidth,
+                    appHeight: document.querySelector('.app').getBoundingClientRect().height,
+                    windowHeight: innerHeight
+                })""")
+                self.assertLessEqual(metrics["documentWidth"], metrics["windowWidth"] + 1)
+                self.assertLessEqual(abs(metrics["appHeight"] - metrics["windowHeight"]), 1)
+                if width <= 670:
+                    self.assertTrue(page.locator(".phone-switcher").is_visible())
+                    self.assertTrue(page.locator("#pane-left").is_visible())
+                    self.assertFalse(page.locator("#pane-right").is_visible())
+                else:
+                    self.assertFalse(page.locator(".phone-switcher").is_visible())
+                    self.assertTrue(page.locator("#pane-left").is_visible())
+                    self.assertTrue(page.locator("#pane-right").is_visible())
+                self.assert_clean(ext, errors)
+
+    def test_mobile_current_view_screenreader_metadata(self):
+        page, ext, errors = self.open_workspace(390, 844)
+        left = page.locator('.phone-side[data-side="left"]')
+        right = page.locator('.phone-side[data-side="right"]')
+        self.assertEqual("pane-left", left.get_attribute("aria-controls"))
+        self.assertEqual("pane-right", right.get_attribute("aria-controls"))
+        self.assertEqual("true", left.get_attribute("aria-current"))
+        self.assertIsNone(right.get_attribute("aria-current"))
+        right.click()
+        self.assertIsNone(left.get_attribute("aria-current"))
+        self.assertEqual("true", right.get_attribute("aria-current"))
+        self.assertTrue(page.locator("#pane-right").is_visible())
+        # Content-driven navigation must update the same ARIA state.
+        page.locator('#pane-right [data-action="open-quiz"]').click()
+        self.assertEqual("true", left.get_attribute("aria-current"))
+        self.assertIsNone(right.get_attribute("aria-current"))
+        self.assertTrue(page.locator("#pane-left .quiz-item").first.is_visible())
+        self.assert_clean(ext, errors)
+
+    def test_studio_mobile_controls_are_touch_sized(self):
+        page, ext, errors = self.open_workspace(320, 720)
+        selector = page.locator('#pane-left select[data-pane="left"]').bounding_box()
+        nav = page.locator('.phone-side[data-side="left"]').bounding_box()
+        upload = page.locator('#pane-left [data-action="upload-pdf"]').bounding_box()
+        self.assertGreaterEqual(selector["height"], 42)
+        self.assertGreaterEqual(nav["height"], 48)
+        self.assertGreaterEqual(upload["height"], 38)
+        self.assert_clean(ext, errors)
+
+    def test_studio_pdf_uses_original_document_colors_by_default(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "test-only.pdf",
+            "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'test-only.pdf'
+        """)
+        frame = page.locator('#pane-left [data-pdf-iframe]')
+        self.assertTrue(frame.evaluate("(el) => el.classList.contains('original-colors')"))
+        self.assertEqual("none", frame.evaluate("(el) => getComputedStyle(el).filter"))
+        page.locator('#pane-left [data-action="toggle-pdf-colors"]').click()
+        self.assertFalse(frame.evaluate("(el) => el.classList.contains('original-colors')"))
+        page.locator('#pane-left [data-action="toggle-pdf-colors"]').click()
+        self.assertTrue(frame.evaluate("(el) => el.classList.contains('original-colors')"))
+        self.assert_clean(ext, errors)
+
+
+    def test_studio_portrait_compact_toolbar_preserves_pdf_reading_height(self):
+        page, ext, errors = self.open_workspace(768, 1024)
+        metrics = page.evaluate("""() => {
+            const height = (selector) =>
+                document.querySelector(selector).getBoundingClientRect().height;
+            return {
+                paneTopbar: height('#pane-left .pane-topbar'),
+                pdfBar: height('#pane-left .pdf-bar'),
+                pdfControls: height('#pane-left .pdf-controls'),
+                pdfStage: height('#pane-left .pdf-stage'),
+                notesTopline: height('#pane-right .study-topline'),
+                notesPaneVisible: document.querySelector('#pane-right').getBoundingClientRect().height
+            };
+        }""")
+        self.assertLessEqual(metrics["paneTopbar"], 49)
+        self.assertLessEqual(metrics["pdfBar"], 43)
+        self.assertLessEqual(metrics["pdfControls"], 50)
+        self.assertGreater(metrics["pdfStage"], 360)
+        self.assertLessEqual(metrics["notesTopline"], 39)
+        self.assertGreater(metrics["notesPaneVisible"], 300)
+        self.assertEqual("horizontal", page.locator("#splitter").get_attribute("aria-orientation"))
+        self.assert_clean(ext, errors)
+
+    def test_studio_mobile_korean_explanation_legibility(self):
+        for width in (320, 390):
+            with self.subTest(width=width):
+                page, ext, errors = self.open_workspace(width, 844)
+                page.locator('.phone-side[data-side="right"]').click()
+                self.assertTrue(page.locator("#pane-right .notes-shell").is_visible())
+                typography = page.locator("#pane-right .key-line p").first.evaluate("""el => {
+                    const style = getComputedStyle(el);
+                    return {
+                        font: parseFloat(style.fontSize),
+                        line: parseFloat(style.lineHeight),
+                        width: el.getBoundingClientRect().width
+                    };
+                }""")
+                self.assertGreaterEqual(typography["font"], 14)
+                self.assertGreaterEqual(typography["line"], 25)
+                self.assertGreater(typography["width"], 180)
+                self.assertFalse(page.evaluate(
+                    "document.documentElement.scrollWidth > window.innerWidth + 1"
+                ))
+                self.assert_clean(ext, errors)
+
+
+    def test_tablet_pdf_zoom_preserves_scroll_and_document_node(self):
+        page, ext, errors = self.open_workspace(768, 1024)
+        stage = page.locator('#pane-left [data-pdf-stage]')
+        stage.evaluate("""el => {
+            el.dataset.sentinel = 'preserved';
+            el.scrollTop = 160;
+        }""")
+        before = stage.evaluate("(el) => el.scrollTop")
+        self.assertGreater(before, 90, "Synthetic PDF must be vertically scrollable")
+        page.locator('#pane-left [data-action="zoom-in"]').click()
+        self.assertEqual("110%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertEqual("preserved", stage.get_attribute("data-sentinel"))
+        self.assertAlmostEqual(before * 1.1, stage.evaluate("(el) => el.scrollTop"), delta=3)
+        page.locator('#pane-left [data-action="fit-pdf"]').click()
+        self.assertEqual("100%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertEqual("preserved", stage.get_attribute("data-sentinel"))
+        self.assertAlmostEqual(before, stage.evaluate("(el) => el.scrollTop"), delta=4)
+        self.assert_clean(ext, errors)
+
+    def test_mobile_zoomed_pdf_can_pan_to_both_horizontal_edges(self):
+        for width in (320, 390):
+            with self.subTest(width=width):
+                page, ext, errors = self.open_workspace(width, 844)
+                stage = page.locator('#pane-left [data-pdf-stage]')
+                for _ in range(6):
+                    page.locator('#pane-left [data-action="zoom-in"]').click()
+                self.assertEqual("160%", page.locator('#pane-left [data-zoom-count]').inner_text())
+                width_info = stage.evaluate("""el => ({
+                    viewport: el.clientWidth,
+                    content: el.scrollWidth
+                })""")
+                self.assertGreater(width_info["content"], width_info["viewport"] + 25,
+                                   "Zoomed demo PDF must have a reachable horizontal pan range")
+                stage.evaluate("(el) => el.scrollLeft = 0")
+                self.assertEqual(0, stage.evaluate("(el) => el.scrollLeft"))
+                stage.evaluate("(el) => el.scrollLeft = 9999")
+                self.assertGreater(stage.evaluate("(el) => el.scrollLeft"), 25)
+                page.locator('#pane-left [data-action="zoom-out"]').click()
+                self.assertEqual("150%", page.locator('#pane-left [data-zoom-count]').inner_text())
+                self.assert_clean(ext, errors)
+
+    def test_local_pdf_zoom_updates_fragment_without_rebuilding_iframe(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "local-only.pdf",
+            "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'local-only.pdf'
+        """)
+        frame = page.locator('#pane-left [data-pdf-iframe]')
+        frame.evaluate("(el) => el.dataset.sentinel = 'preserved'")
+        source = frame.get_attribute("src")
+        self.assertIn("#page=1&zoom=100", source)
+        page.locator('#pane-left [data-action="zoom-in"]').click()
+        self.assertEqual("preserved", frame.get_attribute("data-sentinel"))
+        self.assertEqual(source.split("#")[0] + "#page=1&zoom=110", frame.get_attribute("src"))
+        page.locator('#pane-left [data-action="fit-pdf"]').click()
+        self.assertEqual("preserved", frame.get_attribute("data-sentinel"))
+        self.assertEqual(source, frame.get_attribute("src"))
+        self.assert_clean(ext, errors)
+
+
+    def test_local_pdf_color_toggle_keyboard_focus_and_frame_identity(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "local-color-test.pdf",
+            "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'local-color-test.pdf'
+        """)
+        page.locator('#pane-right select[data-pane="right"]').select_option("pdf")
+        before_sources = []
+        for side in ("left", "right"):
+            frame = page.locator(f'#pane-{side} [data-pdf-iframe]')
+            frame.evaluate("(el) => el.dataset.identity = 'pdf-stays-mounted'")
+            before_sources.append(frame.get_attribute("src"))
+            self.assertTrue(frame.evaluate(
+                "(el) => el.classList.contains('original-colors')"
+            ))
+        toggle = page.locator('#pane-left [data-action="toggle-pdf-colors"]')
+        toggle.focus()
+        self.assertTrue(toggle.evaluate("(el) => document.activeElement === el"))
+        toggle.press("Enter")
+        self.assertTrue(toggle.evaluate(
+            "(el) => document.activeElement === el"
+        ), "Keyboard focus must remain on the toggle after changing native PDF colors")
+        self.assertEqual("false", toggle.get_attribute("aria-pressed"))
+        for side, src in zip(("left", "right"), before_sources):
+            frame = page.locator(f'#pane-{side} [data-pdf-iframe]')
+            self.assertEqual("pdf-stays-mounted", frame.get_attribute("data-identity"))
+            self.assertEqual(src, frame.get_attribute("src"))
+            self.assertFalse(frame.evaluate(
+                "(el) => el.classList.contains('original-colors')"
+            ))
+        toggle.press("Enter")
+        self.assertEqual("true", toggle.get_attribute("aria-pressed"))
+        self.assertTrue(toggle.evaluate("(el) => document.activeElement === el"))
+        self.assert_clean(ext, errors)
+
+    def test_pdf_zoom_limits_disable_only_the_unavailable_action(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.locator('#pane-right select[data-pane="right"]').select_option("pdf")
+        plus = page.locator('#pane-left [data-action="zoom-in"]')
+        minus = page.locator('#pane-left [data-action="zoom-out"]')
+        self.assertTrue(plus.is_enabled())
+        self.assertTrue(minus.is_enabled())
+        for _ in range(3):
+            minus.click()
+        self.assertEqual("70%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertFalse(minus.is_enabled())
+        self.assertFalse(page.locator('#pane-right [data-action="zoom-out"]').is_enabled())
+        self.assertTrue(plus.is_enabled())
+        plus.focus()
+        plus.press("Enter")
+        self.assertEqual("80%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertTrue(minus.is_enabled())
+        for _ in range(8):
+            plus.click()
+        self.assertEqual("160%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertFalse(plus.is_enabled())
+        self.assertFalse(page.locator('#pane-right [data-action="zoom-in"]').is_enabled())
+        self.assertTrue(minus.is_enabled())
+        page.locator('#pane-left [data-action="fit-pdf"]').click()
+        self.assertEqual("100%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertTrue(plus.is_enabled())
+        self.assertTrue(minus.is_enabled())
+        self.assert_clean(ext, errors)
+
+
+    def test_local_pdf_page_navigation_preserves_focus_and_iframe(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "private-local-test.pdf",
+            "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'private-local-test.pdf'
+        """)
+        page.locator('#pane-right select[data-pane="right"]').select_option("pdf")
+        nodes = {}
+        for side in ("left", "right"):
+            frame = page.locator(f'#pane-{side} [data-pdf-iframe]')
+            frame.evaluate("(el) => el.dataset.identity = 'same-native-frame'")
+            nodes[side] = frame.get_attribute("src").split("#")[0]
+        next_button = page.locator('#pane-left [data-action="next-page"]')
+        next_button.focus()
+        next_button.press("Enter")
+        self.assertTrue(next_button.evaluate("(el) => document.activeElement === el"))
+        for side in ("left", "right"):
+            frame = page.locator(f'#pane-{side} [data-pdf-iframe]')
+            self.assertEqual("same-native-frame", frame.get_attribute("data-identity"))
+            self.assertEqual(nodes[side] + "#page=2&zoom=100", frame.get_attribute("src"))
+            self.assertEqual("2", page.locator(f'#pane-{side} [data-page-now]').inner_text())
+        prev_button = page.locator('#pane-left [data-action="prev-page"]')
+        prev_button.focus()
+        prev_button.press("Enter")
+        self.assertTrue(prev_button.evaluate("(el) => document.activeElement === el"))
+        self.assertEqual("1쪽", page.locator("#globalProgressLabel").inner_text())
+        for side in ("left", "right"):
+            frame = page.locator(f'#pane-{side} [data-pdf-iframe]')
+            self.assertEqual("same-native-frame", frame.get_attribute("data-identity"))
+            self.assertEqual(nodes[side] + "#page=1&zoom=100", frame.get_attribute("src"))
+        # Reaching a boundary must not remount the native PDF iframe.
+        prev_button.press("Enter")
+        self.assertTrue(prev_button.evaluate("(el) => document.activeElement === el"))
+        self.assertEqual("same-native-frame",
+                         page.locator('#pane-left [data-pdf-iframe]').get_attribute("data-identity"))
+        self.assert_clean(ext, errors)
+
+    def test_demo_pdf_page_navigation_preserves_zoom_and_toolbar(self):
+        page, ext, errors = self.open_workspace(390, 844)
+        for _ in range(3):
+            page.locator('#pane-left [data-action="zoom-in"]').click()
+        stage = page.locator('#pane-left [data-pdf-stage]')
+        stage.evaluate("(el) => { el.dataset.identity = 'same-demo-stage'; el.scrollTop = 180; }")
+        self.assertGreater(stage.evaluate("(el) => el.scrollTop"), 50)
+        next_button = page.locator('#pane-left [data-action="next-page"]')
+        next_button.focus()
+        next_button.press("Enter")
+        self.assertEqual("13", page.locator('#pane-left [data-page-now]').inner_text())
+        self.assertEqual("130%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertIn("복소 지수와 위상", page.locator('#pane-left .demo-title').inner_text())
+        self.assertEqual("same-demo-stage", stage.get_attribute("data-identity"))
+        self.assertTrue(next_button.evaluate("(el) => document.activeElement === el"))
+        self.assertEqual(0, stage.evaluate("(el) => el.scrollTop"))
+        self.assert_clean(ext, errors)
+
+
+    def test_invalid_local_pdf_replacement_keeps_existing_document(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        upload = page.locator('#pane-left input[data-pdf-input]')
+        upload.set_input_files({
+            "name": "existing.pdf",
+            "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'existing.pdf'
+        """)
+        page.locator('#pane-left [data-action="next-page"]').click()
+        page.locator('#pane-left [data-action="zoom-in"]').click()
+        url = page.locator('#pane-left [data-pdf-iframe]').get_attribute("src")
+        page.evaluate("""() => {
+            window.__revokedPDFUrls = [];
+            const original = URL.revokeObjectURL.bind(URL);
+            URL.revokeObjectURL = (value) => {
+                window.__revokedPDFUrls.push(value);
+                return original(value);
+            };
+        }""")
+        for name, payload in (("pretend.pdf", b"<html>not a PDF</html>"),
+                              ("empty.pdf", b"")):
+            with self.subTest(name=name):
+                page.locator('#pane-left input[data-pdf-input]').set_input_files({
+                    "name": name,
+                    "mimeType": "application/pdf",
+                    "buffer": payload,
+                })
+                if payload:
+                    page.wait_for_function("""() =>
+                        document.querySelector('#toast').textContent.includes('형식이 올바르지')
+                    """)
+                else:
+                    page.wait_for_function("""() =>
+                        document.querySelector('#toast').textContent.includes('1바이트 이상')
+                    """)
+                self.assertEqual("existing.pdf",
+                                 page.locator('#pane-left [data-pdf-name]').inner_text())
+                self.assertEqual(url,
+                                 page.locator('#pane-left [data-pdf-iframe]').get_attribute("src"))
+                self.assertEqual("2", page.locator('#pane-left [data-page-now]').inner_text())
+                self.assertEqual("110%", page.locator('#pane-left [data-zoom-count]').inner_text())
+                self.assertEqual([], page.evaluate("window.__revokedPDFUrls"))
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "replacement.pdf",
+            "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'replacement.pdf'
+        """)
+        new_url = page.locator('#pane-left [data-pdf-iframe]').get_attribute("src")
+        self.assertNotEqual(url.split("#")[0], new_url.split("#")[0])
+        self.assertIn("#page=1&zoom=100", new_url)
+        self.assertEqual("1", page.locator('#pane-left [data-page-now]').inner_text())
+        self.assertEqual("100%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertEqual([url.split("#")[0]], page.evaluate("window.__revokedPDFUrls"))
+        self.assert_clean(ext, errors)
+
+    def test_keyboard_local_pdf_file_picker_restores_focus_after_selection(self):
+        for width, height in ((390, 844), (1024, 768)):
+            with self.subTest(viewport=width):
+                page, ext, errors = self.open_workspace(width, height)
+                trigger = page.locator('#pane-left [data-action="upload-pdf"]')
+                trigger.focus()
+                self.assertTrue(trigger.evaluate("(el) => document.activeElement === el"))
+                with page.expect_file_chooser() as chooser:
+                    trigger.press("Enter")
+                chooser.value.set_files({
+                    "name": "keyboard.pdf",
+                    "mimeType": "application/pdf",
+                    "buffer": synthetic_pdf(),
+                })
+                page.wait_for_function("""() =>
+                    document.querySelector('#pane-left [data-pdf-name]').textContent === 'keyboard.pdf'
+                """)
+                self.assertTrue(trigger.evaluate(
+                    "(el) => document.activeElement === el"
+                ), "Keyboard focus must return to the newly mounted upload control")
+                self.assertTrue(page.locator(
+                    '#pane-left [data-pdf-iframe]'
+                ).get_attribute("src").startswith("blob:"))
+                self.assert_clean(ext, errors)
+
+
+    def test_pdf_picker_cancel_restores_keyboard_focus_and_same_file_retry(self):
+        page, ext, errors = self.open_workspace(390, 844)
+        trigger = page.locator('#pane-left [data-action="upload-pdf"]')
+        input_file = page.locator('#pane-left input[data-pdf-input]')
+        page.evaluate("""() => {
+            window.__pickerChanges = 0;
+            document.addEventListener('change', e => {
+                if(e.target.matches('[data-pdf-input]'))window.__pickerChanges++;
+            }, true);
+            window.__createdPdfUrls = 0;
+            const originalCreate = URL.createObjectURL.bind(URL);
+            URL.createObjectURL = value => {
+                window.__createdPdfUrls++;
+                return originalCreate(value);
+            };
+        }""")
+        trigger.focus()
+        with page.expect_file_chooser() as chooser:
+            trigger.press("Enter")
+        # Playwright exposes the chooser, but not the OS Cancel button.
+        # Dispatch the standard file-input cancel event to exercise our handler.
+        input_file.dispatch_event("cancel")
+        self.assertTrue(trigger.evaluate("(el) => document.activeElement === el"))
+        self.assertEqual("Lecture_04.pdf", page.locator(
+            '#pane-left [data-pdf-name]').inner_text())
+        self.assertEqual(0, page.evaluate("window.__createdPdfUrls"))
+        invalid = {"name": "repeat-invalid.pdf",
+                   "mimeType": "application/pdf",
+                   "buffer": b"not really a PDF"}
+        for expected in (1, 2):
+            with page.expect_file_chooser() as chooser:
+                trigger.press("Enter")
+            self.assertEqual("", input_file.evaluate("(el) => el.value"))
+            chooser.value.set_files(invalid)
+            page.wait_for_function("""(count) =>
+                window.__pickerChanges === count
+            """, arg=expected)
+            self.assertIn("형식이 올바르지", page.locator("#toast").inner_text())
+            self.assertTrue(trigger.evaluate(
+                "(el) => document.activeElement === el"))
+        self.assertEqual(0, page.evaluate("window.__createdPdfUrls"))
+        with page.expect_file_chooser() as chooser:
+            trigger.press("Enter")
+        chooser.value.set_files({
+            "name": "after-cancel.pdf",
+            "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'after-cancel.pdf'
+        """)
+        self.assertTrue(trigger.evaluate(
+            "(el) => document.activeElement === el"))
+        self.assertEqual(1, page.evaluate("window.__createdPdfUrls"))
+        self.assertTrue(page.locator(
+            '#pane-left [data-pdf-iframe]').get_attribute("src").startswith("blob:"))
+        self.assert_clean(ext, errors)
+
+    def test_pdf_async_selection_race_does_not_replace_newer_document(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.locator('#pane-right select[data-pane="right"]').select_option("pdf")
+        page.evaluate("""() => {
+            const slice = File.prototype.slice;
+            File.prototype.slice = function(...args) {
+                const blob = slice.apply(this, args);
+                if(this.name === 'slow.pdf'){
+                    const arrayBuffer = blob.arrayBuffer.bind(blob);
+                    blob.arrayBuffer = () => new Promise((resolve, reject) => {
+                        setTimeout(() => arrayBuffer().then(resolve, reject), 260);
+                    });
+                }
+                return blob;
+            };
+            window.__createdPdfUrls = [];
+            const originalCreate = URL.createObjectURL.bind(URL);
+            URL.createObjectURL = file => {
+                const uri = originalCreate(file);
+                window.__createdPdfUrls.push({name:file.name, uri});
+                return uri;
+            };
+        }""")
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "slow.pdf", "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.locator('#pane-right input[data-pdf-input]').set_input_files({
+            "name": "newer.pdf", "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'newer.pdf'
+        """)
+        current = page.locator('#pane-left [data-pdf-iframe]').get_attribute("src")
+        page.wait_for_timeout(400)
+        for side in ("left", "right"):
+            self.assertEqual("newer.pdf", page.locator(
+                f'#pane-{side} [data-pdf-name]').inner_text())
+            self.assertEqual(current, page.locator(
+                f'#pane-{side} [data-pdf-iframe]').get_attribute("src"))
+        names = page.evaluate("window.__createdPdfUrls.map(v => v.name)")
+        self.assertEqual(["newer.pdf"], names,
+                         "Superseded PDF must not allocate a stale blob URL")
+        self.assert_clean(ext, errors)
+
+
+    def test_local_pdf_object_url_survives_cross_pane_mode_switches(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.evaluate("""() => {
+            window.__pdf_created = [];
+            window.__pdf_revoked = [];
+            const create = URL.createObjectURL.bind(URL);
+            const revoke = URL.revokeObjectURL.bind(URL);
+            URL.createObjectURL = file => {
+                const uri = create(file); window.__pdf_created.push(uri); return uri;
+            };
+            URL.revokeObjectURL = uri => {
+                window.__pdf_revoked.push(uri); return revoke(uri);
+            };
+        }""")
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "mode-switch.pdf", "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() => document.querySelector(
+            '#pane-left [data-pdf-name]').textContent === 'mode-switch.pdf'""")
+        page.locator('#pane-right select[data-pane="right"]').select_option("pdf")
+        page.locator('#pane-left [data-action="next-page"]').click()
+        page.locator('#pane-left [data-action="zoom-in"]').click()
+        original = page.locator('#pane-left [data-pdf-iframe]').get_attribute("src")
+        self.assertIn("#page=2&zoom=110", original)
+        for side in ("left", "right"):
+            for mode in ("notes", "quiz", "pdf"):
+                page.locator(f'#pane-{side} select[data-pane="{side}"]').select_option(mode)
+                if mode == "pdf":
+                    self.assertEqual(original, page.locator(
+                        f'#pane-{side} [data-pdf-iframe]').get_attribute("src"))
+        state = page.evaluate("""() => ({
+            created: window.__pdf_created,
+            revoked: window.__pdf_revoked
+        })""")
+        self.assertEqual([original.split("#")[0]], state["created"])
+        self.assertEqual([], state["revoked"],
+                         "View switching must not revoke a PDF still in use")
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "replacement-local.pdf", "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'replacement-local.pdf'
+        """)
+        self.assertEqual([original.split("#")[0]], page.evaluate("window.__pdf_revoked"))
+        self.assertEqual(2, page.evaluate("window.__pdf_created.length"))
+        self.assert_clean(ext, errors)
+
+    def test_reference_source_page_updates_existing_pdf_in_opposite_pane(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.locator('#pane-right select[data-pane="right"]').select_option("pdf")
+        page.locator('#pane-left select[data-pane="left"]').select_option("notes")
+        # Existing right PDF at page 13. Source in left notes points to page 12.
+        page.locator('#pane-right [data-action="next-page"]').click()
+        self.assertEqual("13", page.locator('#pane-right [data-page-now]').inner_text())
+        page.locator('#pane-left [data-action="source-page"]').first.click()
+        self.assertEqual("12", page.locator('#pane-right [data-page-now]').inner_text())
+        self.assertEqual("12 / 42", page.locator('#globalProgressLabel').inner_text())
+        self.assertIn("시간 이동 성질", page.locator('#pane-right .demo-title').inner_text())
         self.assert_clean(ext, errors)
 
 
