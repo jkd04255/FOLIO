@@ -165,6 +165,9 @@ class WorkspaceBrowserTests(unittest.TestCase):
             "mimeType": "application/pdf",
             "buffer": synthetic_pdf(),
         })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'synthetic.pdf'
+        """)
         self.assertEqual("synthetic.pdf", page.locator('#pane-left [data-pdf-name]').inner_text())
         self.assertTrue(page.locator('#pane-left [data-pdf-iframe]').get_attribute("src").startswith("blob:"))
         page.locator('#pane-right select[data-pane="right"]').select_option("notes")
