@@ -229,7 +229,7 @@ async function loadFile(file,fromSide=null){
  focusPdfUpload(fromSide);
  toast('PDF가 기기 안에서 열렸습니다. 외부 전송은 하지 않았습니다.');
 }
-function sourcePage(pane,page){const opposite=pane==='left'?'right':'left';S.page=page;setMode(opposite,'pdf');pdfChangePage(0);revealPhoneSide(opposite);toast(`${page}쪽 PDF를 ${opposite==='left'?'왼쪽':'오른쪽'} 화면에 표시합니다.`);}
+function sourcePage(pane,page){const opposite=pane==='left'?'right':'left';pdfChangePage(page-S.page);setMode(opposite,'pdf');revealPhoneSide(opposite);toast(`${S.page}쪽 PDF를 ${opposite==='left'?'왼쪽':'오른쪽'} 화면에 표시합니다.`);}
 function quizChangeAnswer(qid,answer){if(S.submitted[qid])return;S.answer[qid]=answer;for(const side of ['left','right'])if(S.mode[side]==='quiz'){const root=$('#body-'+side),el=$(`[data-q-item="${qid}"]`,root);if(!el)continue;if(typeof answer==='number'){$$('.choice',el).forEach(c=>c.setAttribute('aria-pressed',String(Number(c.dataset.choice)===answer)));}else{const input=$('.short-answer',el);if(input&&document.activeElement!==input)input.value=answer;}}}
 function quizSubmit(qid){const q=Q[qid];if(S.answer[qid]===undefined||S.answer[qid]===''){toast('먼저 답안을 입력해 주세요.');return;}S.submitted[qid]=true;for(const side of ['left','right'])if(S.mode[side]==='quiz'){const prev=$('.study-scroll',$('#body-'+side))?.scrollTop||0;renderQuiz(side);const nextScroll=$('.study-scroll',$('#body-'+side));if(nextScroll)nextScroll.scrollTop=prev;}toast(q.kind==='short'?'해설을 확인해 주세요. 자동 채점은 연결 전입니다.':'문항 해설을 표시했습니다.');}
 function quizReset(){S.answer={};S.submitted={};for(const side of ['left','right'])if(S.mode[side]==='quiz')renderQuiz(side);toast('시연용 답안을 초기화했습니다.');}
