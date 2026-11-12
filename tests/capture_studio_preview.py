@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "artifacts" / "studio-previews"
 
 
-def capture(browser, width, height, name, side=None, zoom_steps=0):
+def capture(browser, width, height, name, side=None, zoom_steps=0, page_steps=0):
     context = browser.new_context(
         viewport={"width": width, "height": height},
         reduced_motion="reduce",
@@ -30,6 +30,8 @@ def capture(browser, width, height, name, side=None, zoom_steps=0):
             page.locator(f'.phone-side[data-side="{side}"]').click()
         for _ in range(zoom_steps):
             page.locator('#pane-left [data-action="zoom-in"]').click()
+        for _ in range(page_steps):
+            page.locator('#pane-left [data-action="next-page"]').click()
         if external:
             raise RuntimeError(f"External requests not permitted: {external}")
         page.screenshot(path=str(OUT / name), full_page=False, animations="disabled")
@@ -48,6 +50,7 @@ if __name__ == "__main__":
             capture(b, 390, 844, "phone-explanation.png", side="right")
             capture(b, 768, 1024, "tablet-portrait-zoom130.png", zoom_steps=3)
             capture(b, 390, 844, "phone-pdf-zoom160.png", zoom_steps=6)
+            capture(b, 390, 844, "phone-pdf-page13.png", page_steps=1)
         finally:
             b.close()
-    print(f"Saved 6 synthetic demo previews in {OUT}")
+    print(f"Saved 7 synthetic demo previews in {OUT}")
