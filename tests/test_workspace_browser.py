@@ -574,5 +574,110 @@ class WorkspaceBrowserTests(unittest.TestCase):
                 self.assert_clean(ext, errors)
 
 
+    def test_pdf_picker_cancel_restores_keyboard_focus_and_same_file_retry(self):
+        page, ext, errors = self.open_workspace(390, 844)
+        trigger = page.locator('#pane-left [data-action="upload-pdf"]')
+        input_file = page.locator('#pane-left input[data-pdf-input]')
+        page.evaluate("""() => {
+            window.__pickerChanges = 0;
+            document.addEventListener('change', e => {
+                if(e.target.matches('[data-pdf-input]'))window.__pickerChanges++;
+            }, true);
+            window.__createdPdfUrls = 0;
+            const originalCreate = URL.createObjectURL.bind(URL);
+            URL.createObjectURL = value => {
+                window.__createdPdfUrls++;
+                return originalCreate(value);
+            };
+        }""")
+        trigger.focus()
+        with page.expect_file_chooser() as chooser:
+            trigger.press("Enter")
+        # Playwright exposes the chooser, but not the OS Cancel button.
+        # Dispatch the standard file-input cancel event to exercise our handler.
+        input_file.dispatch_event("cancel")
+        self.assertTrue(trigger.evaluate("(el) => document.activeElement === el"))
+        self.assertEqual("Lecture_04.pdf", page.locator(
+            '#pane-left [data-pdf-name]').inner_text())
+        self.assertEqual(0, page.evaluate("window.__createdPdfUrls"))
+        invalid = {"name": "repeat-invalid.pdf",
+                   "mimeType": "application/pdf",
+                   "buffer": b"not really a PDF"}
+        for expected in (1, 2):
+            with page.expect_file_chooser() as chooser:
+                trigger.press("Enter")
+            self.assertEqual("", input_file.evaluate("(el) => el.value"))
+            chooser.value.set_files(invalid)
+            page.wait_for_function("""(count) =>
+                window.__pickerChanges === count
+            """, arg=expected)
+            self.assertIn("형식이 올바르지", page.locator("#toast").inner_text())
+            self.assertTrue(trigger.evaluate(
+                "(el) => document.activeElement === el"))
+        self.assertEqual(0, page.evaluate("window.__createdPdfUrls"))
+        with page.expect_file_chooser() as chooser:
+            trigger.press("Enter")
+        chooser.value.set_files({
+            "name": "after-cancel.pdf",
+            "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'after-cancel.pdf'
+        """)
+        self.assertTrue(trigger.evaluate(
+            "(el) => document.activeElement === el"))
+        self.assertEqual(1, page.evaluate("window.__createdPdfUrls"))
+        self.assertTrue(page.locator(
+            '#pane-left [data-pdf-iframe]').get_attribute("src").startswith("blob:"))
+        self.assert_clean(ext, errors)
+
+    def test_pdf_async_selection_race_does_not_replace_newer_document(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.locator('#pane-right select[data-pane="right"]').select_option("pdf")
+        page.evaluate("""() => {
+            const slice = File.prototype.slice;
+            File.prototype.slice = function(...args) {
+                const blob = slice.apply(this, args);
+                if(this.name === 'slow.pdf'){
+                    const arrayBuffer = blob.arrayBuffer.bind(blob);
+                    blob.arrayBuffer = () => new Promise((resolve, reject) => {
+                        setTimeout(() => arrayBuffer().then(resolve, reject), 260);
+                    });
+                }
+                return blob;
+            };
+            window.__createdPdfUrls = [];
+            const originalCreate = URL.createObjectURL.bind(URL);
+            URL.createObjectURL = file => {
+                const uri = originalCreate(file);
+                window.__createdPdfUrls.push({name:file.name, uri});
+                return uri;
+            };
+        }""")
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "slow.pdf", "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.locator('#pane-right input[data-pdf-input]').set_input_files({
+            "name": "newer.pdf", "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'newer.pdf'
+        """)
+        current = page.locator('#pane-left [data-pdf-iframe]').get_attribute("src")
+        page.wait_for_timeout(400)
+        for side in ("left", "right"):
+            self.assertEqual("newer.pdf", page.locator(
+                f'#pane-{side} [data-pdf-name]').inner_text())
+            self.assertEqual(current, page.locator(
+                f'#pane-{side} [data-pdf-iframe]').get_attribute("src"))
+        names = page.evaluate("window.__createdPdfUrls.map(v => v.name)")
+        self.assertEqual(["newer.pdf"], names,
+                         "Superseded PDF must not allocate a stale blob URL")
+        self.assert_clean(ext, errors)
+
+
 if __name__ == "__main__":
     unittest.main()
