@@ -430,5 +430,62 @@ class WorkspaceBrowserTests(unittest.TestCase):
         self.assert_clean(ext, errors)
 
 
+    def test_local_pdf_page_navigation_preserves_focus_and_iframe(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "private-local-test.pdf",
+            "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.locator('#pane-right select[data-pane="right"]').select_option("pdf")
+        nodes = {}
+        for side in ("left", "right"):
+            frame = page.locator(f'#pane-{side} [data-pdf-iframe]')
+            frame.evaluate("(el) => el.dataset.identity = 'same-native-frame'")
+            nodes[side] = frame.get_attribute("src").split("#")[0]
+        next_button = page.locator('#pane-left [data-action="next-page"]')
+        next_button.focus()
+        next_button.press("Enter")
+        self.assertTrue(next_button.evaluate("(el) => document.activeElement === el"))
+        for side in ("left", "right"):
+            frame = page.locator(f'#pane-{side} [data-pdf-iframe]')
+            self.assertEqual("same-native-frame", frame.get_attribute("data-identity"))
+            self.assertEqual(nodes[side] + "#page=2&zoom=100", frame.get_attribute("src"))
+            self.assertEqual("2", page.locator(f'#pane-{side} [data-page-now]').inner_text())
+        prev_button = page.locator('#pane-left [data-action="prev-page"]')
+        prev_button.focus()
+        prev_button.press("Enter")
+        self.assertTrue(prev_button.evaluate("(el) => document.activeElement === el"))
+        self.assertEqual("1쪽", page.locator("#globalProgressLabel").inner_text())
+        for side in ("left", "right"):
+            frame = page.locator(f'#pane-{side} [data-pdf-iframe]')
+            self.assertEqual("same-native-frame", frame.get_attribute("data-identity"))
+            self.assertEqual(nodes[side] + "#page=1&zoom=100", frame.get_attribute("src"))
+        # Reaching a boundary must not remount the native PDF iframe.
+        prev_button.press("Enter")
+        self.assertTrue(prev_button.evaluate("(el) => document.activeElement === el"))
+        self.assertEqual("same-native-frame",
+                         page.locator('#pane-left [data-pdf-iframe]').get_attribute("data-identity"))
+        self.assert_clean(ext, errors)
+
+    def test_demo_pdf_page_navigation_preserves_zoom_and_toolbar(self):
+        page, ext, errors = self.open_workspace(390, 844)
+        for _ in range(3):
+            page.locator('#pane-left [data-action="zoom-in"]').click()
+        stage = page.locator('#pane-left [data-pdf-stage]')
+        stage.evaluate("(el) => { el.dataset.identity = 'same-demo-stage'; el.scrollTop = 180; }")
+        self.assertGreater(stage.evaluate("(el) => el.scrollTop"), 50)
+        next_button = page.locator('#pane-left [data-action="next-page"]')
+        next_button.focus()
+        next_button.press("Enter")
+        self.assertEqual("13", page.locator('#pane-left [data-page-now]').inner_text())
+        self.assertEqual("130%", page.locator('#pane-left [data-zoom-count]').inner_text())
+        self.assertIn("복소 지수와 위상", page.locator('#pane-left .demo-title').inner_text())
+        self.assertEqual("same-demo-stage", stage.get_attribute("data-identity"))
+        self.assertTrue(next_button.evaluate("(el) => document.activeElement === el"))
+        self.assertEqual(0, stage.evaluate("(el) => el.scrollTop"))
+        self.assert_clean(ext, errors)
+
+
 if __name__ == "__main__":
     unittest.main()
