@@ -694,5 +694,68 @@ class WorkspaceBrowserTests(unittest.TestCase):
         self.assert_clean(ext, errors)
 
 
+    def test_local_pdf_object_url_survives_cross_pane_mode_switches(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.evaluate("""() => {
+            window.__pdf_created = [];
+            window.__pdf_revoked = [];
+            const create = URL.createObjectURL.bind(URL);
+            const revoke = URL.revokeObjectURL.bind(URL);
+            URL.createObjectURL = file => {
+                const uri = create(file); window.__pdf_created.push(uri); return uri;
+            };
+            URL.revokeObjectURL = uri => {
+                window.__pdf_revoked.push(uri); return revoke(uri);
+            };
+        }""")
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "mode-switch.pdf", "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() => document.querySelector(
+            '#pane-left [data-pdf-name]').textContent === 'mode-switch.pdf'""")
+        page.locator('#pane-right select[data-pane="right"]').select_option("pdf")
+        page.locator('#pane-left [data-action="next-page"]').click()
+        page.locator('#pane-left [data-action="zoom-in"]').click()
+        original = page.locator('#pane-left [data-pdf-iframe]').get_attribute("src")
+        self.assertIn("#page=2&zoom=110", original)
+        for side in ("left", "right"):
+            for mode in ("notes", "quiz", "pdf"):
+                page.locator(f'#pane-{side} select[data-pane="{side}"]').select_option(mode)
+                if mode == "pdf":
+                    self.assertEqual(original, page.locator(
+                        f'#pane-{side} [data-pdf-iframe]').get_attribute("src"))
+        state = page.evaluate("""() => ({
+            created: window.__pdf_created,
+            revoked: window.__pdf_revoked
+        })""")
+        self.assertEqual([original.split("#")[0]], state["created"])
+        self.assertEqual([], state["revoked"],
+                         "View switching must not revoke a PDF still in use")
+        page.locator('#pane-left input[data-pdf-input]').set_input_files({
+            "name": "replacement-local.pdf", "mimeType": "application/pdf",
+            "buffer": synthetic_pdf(),
+        })
+        page.wait_for_function("""() =>
+            document.querySelector('#pane-left [data-pdf-name]').textContent === 'replacement-local.pdf'
+        """)
+        self.assertEqual([original.split("#")[0]], page.evaluate("window.__pdf_revoked"))
+        self.assertEqual(2, page.evaluate("window.__pdf_created.length"))
+        self.assert_clean(ext, errors)
+
+    def test_reference_source_page_updates_existing_pdf_in_opposite_pane(self):
+        page, ext, errors = self.open_workspace(1024, 768)
+        page.locator('#pane-right select[data-pane="right"]').select_option("pdf")
+        page.locator('#pane-left select[data-pane="left"]').select_option("notes")
+        # Existing right PDF at page 13. Source in left notes points to page 12.
+        page.locator('#pane-right [data-action="next-page"]').click()
+        self.assertEqual("13", page.locator('#pane-right [data-page-now]').inner_text())
+        page.locator('#pane-left [data-action="source-page"]').first.click()
+        self.assertEqual("12", page.locator('#pane-right [data-page-now]').inner_text())
+        self.assertEqual("12 / 42", page.locator('#globalProgressLabel').inner_text())
+        self.assertIn("시간 이동 성질", page.locator('#pane-right .demo-title').inner_text())
+        self.assert_clean(ext, errors)
+
+
 if __name__ == "__main__":
     unittest.main()
