@@ -4,7 +4,7 @@ Run only on the checked-out design branch. No user files, network, deployment,
 or remote screenshots are involved. CI uploads images as a private artifact.
 """
 from pathlib import Path
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import Error as PlaywrightError, sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "artifacts" / "studio-previews"
@@ -34,7 +34,14 @@ def capture(browser, width, height, name, side=None, zoom_steps=0, page_steps=0)
             page.locator('#pane-left [data-action="next-page"]').click()
         if external:
             raise RuntimeError(f"External requests not permitted: {external}")
-        page.screenshot(path=str(OUT / name), full_page=False, animations="disabled")
+        try:
+            page.screenshot(path=str(OUT / name), full_page=False, animations="disabled")
+        except PlaywrightError as exc:
+            # Rare headless Chromium protocol capture failure; never mask other errors.
+            if "Unable to capture screenshot" not in str(exc):
+                raise
+            page.wait_for_timeout(250)
+            page.screenshot(path=str(OUT / name), full_page=False, animations="disabled")
     finally:
         context.close()
 
