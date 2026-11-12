@@ -88,6 +88,13 @@ jobs:
           test -s _site/styles/studio-v2.css
           test "$(find _site -type f | wc -l)" -eq 4
           echo 'Only the static demo index, local stylesheet, and metadata are published.'
+      - name: Store minimal offline preview ZIP privately
+        uses: actions/upload-artifact@v4
+        with:
+          name: folio-static-demo-files
+          path: _site/
+          retention-days: 7
+          if-no-files-found: error
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload public-only site artifact
