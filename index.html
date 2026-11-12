@@ -65,7 +65,7 @@
    No requests, analytics, login, AI calls or user-file uploads occur. */
 (()=>{
 'use strict';
-const S={mode:{left:'pdf',right:'notes'},phoneSide:'left',page:12,total:42,zoom:1,pdfUrl:null,pdfFileName:null,pdfOriginalColors:true,answer:{},submitted:{},leftPercent:57,topPercent:53};
+const S={mode:{left:'pdf',right:'notes'},phoneSide:'left',page:12,total:42,zoom:1,pdfUrl:null,pdfFileName:null,pdfOriginalColors:true,uploadFromSide:null,answer:{},submitted:{},leftPercent:57,topPercent:53};
 const Q=[
  {id:0,kind:'multiple',title:'시간 영역에서 신호가 지연되면 주파수 영역에서 무엇이 달라지나요?',choices:['진폭 스펙트럼이 0이 됩니다.','위상이 주파수에 비례해 변합니다.','모든 주파수가 두 배가 됩니다.','신호의 평균값이 항상 증가합니다.'],correct:1,explain:'시간 이동은 X(ω)에 e^(−jωt₀)를 곱하므로 진폭은 유지되지만 위상은 바뀝니다.'},
  {id:1,kind:'multiple',title:'x(t − t₀)의 푸리에 변환으로 올바른 식은 무엇인가요?',choices:['X(ω + t₀)','X(ω) + t₀','X(ω)e^(−jωt₀)','X(ω)e^(+t₀)'],correct:2,explain:'시간 지연 t₀의 변환쌍은 X(ω)e^(−jωt₀)입니다.'},
@@ -186,13 +186,51 @@ function setTop(pct){S.topPercent=Math.max(30,Math.min(70,pct));$('#workspace').
 function portrait(){return window.matchMedia('(orientation: portrait) and (min-width: 671px) and (max-width: 1200px)').matches;}
 function updateSeparator(){const sep=$('#splitter');sep.setAttribute('aria-orientation',portrait()?'horizontal':'vertical');sep.setAttribute('aria-valuenow',String(Math.round(portrait()?S.topPercent:S.leftPercent)));}
 function swap(){[S.mode.left,S.mode.right]=[S.mode.right,S.mode.left];renderBoth();toast('좌우 화면을 교환했습니다.');}
-async function loadFile(file){if(!file)return;if(file.type!=='application/pdf'&&!/\.pdf$/i.test(file.name)){toast('PDF 파일을 선택해 주세요.');return;}if(file.size>20*1024*1024){toast('승인된 시험 한도에 따라 PDF는 20MB 이하여야 합니다.');return;}if(S.pdfUrl)URL.revokeObjectURL(S.pdfUrl);S.pdfUrl=URL.createObjectURL(file);S.pdfFileName=file.name;S.page=1;S.zoom=1;renderBoth();toast('PDF가 기기 안에서 열렸습니다. 외부 전송은 하지 않았습니다.');}
+async function loadFile(file){
+ if(!file)return;
+ if(file.type!=='application/pdf'&&!/\.pdf$/i.test(file.name)){
+  S.uploadFromSide=null;toast('PDF 파일을 선택해 주세요.');return;
+ }
+ if(!file.size||file.size>20*1024*1024){
+  S.uploadFromSide=null;toast('PDF 파일은 1바이트 이상, 20MB 이하여야 합니다.');return;
+ }
+ // Only inspect a small local header; do not upload the document.
+ let validHeader=false;
+ try{
+  const prefix=new Uint8Array(await file.slice(0,1024).arrayBuffer());
+  for(let i=0;i<=prefix.length-5;i++){
+   if(prefix[i]===37&&prefix[i+1]===80&&prefix[i+2]===68&&prefix[i+3]===70&&prefix[i+4]===45){
+    validHeader=true;break;
+   }
+  }
+ }catch{
+  S.uploadFromSide=null;toast('PDF 파일을 읽을 수 없습니다.');return;
+ }
+ if(!validHeader){
+  S.uploadFromSide=null;toast('PDF 파일의 형식이 올바르지 않습니다.');return;
+ }
+ let url;
+ try{url=URL.createObjectURL(file);}catch{
+  S.uploadFromSide=null;toast('PDF를 기기에서 열 수 없습니다.');return;
+ }
+ const previous=S.pdfUrl,returnFocus=S.uploadFromSide;
+ S.uploadFromSide=null;
+ S.pdfUrl=url;S.pdfFileName=file.name;S.page=1;S.zoom=1;
+ renderBoth();
+ // Rebuild succeeds before releasing the old locally created URL.
+ if(previous)URL.revokeObjectURL(previous);
+ if(returnFocus){
+  const pane=$('#body-'+returnFocus);
+  $('[data-action="upload-pdf"]',pane)?.focus();
+ }
+ toast('PDF가 기기 안에서 열렸습니다. 외부 전송은 하지 않았습니다.');
+}
 function sourcePage(pane,page){const opposite=pane==='left'?'right':'left';S.page=page;setMode(opposite,'pdf');pdfChangePage(0);revealPhoneSide(opposite);toast(`${page}쪽 PDF를 ${opposite==='left'?'왼쪽':'오른쪽'} 화면에 표시합니다.`);}
 function quizChangeAnswer(qid,answer){if(S.submitted[qid])return;S.answer[qid]=answer;for(const side of ['left','right'])if(S.mode[side]==='quiz'){const root=$('#body-'+side),el=$(`[data-q-item="${qid}"]`,root);if(!el)continue;if(typeof answer==='number'){$$('.choice',el).forEach(c=>c.setAttribute('aria-pressed',String(Number(c.dataset.choice)===answer)));}else{const input=$('.short-answer',el);if(input&&document.activeElement!==input)input.value=answer;}}}
 function quizSubmit(qid){const q=Q[qid];if(S.answer[qid]===undefined||S.answer[qid]===''){toast('먼저 답안을 입력해 주세요.');return;}S.submitted[qid]=true;for(const side of ['left','right'])if(S.mode[side]==='quiz'){const prev=$('.study-scroll',$('#body-'+side))?.scrollTop||0;renderQuiz(side);const nextScroll=$('.study-scroll',$('#body-'+side));if(nextScroll)nextScroll.scrollTop=prev;}toast(q.kind==='short'?'해설을 확인해 주세요. 자동 채점은 연결 전입니다.':'문항 해설을 표시했습니다.');}
 function quizReset(){S.answer={};S.submitted={};for(const side of ['left','right'])if(S.mode[side]==='quiz')renderQuiz(side);toast('시연용 답안을 초기화했습니다.');}
 function handleAction(action,target){const side=target.closest('.pane')?.id?.replace('pane-','')||'left';switch(action){
- case 'upload-pdf':$('[data-pdf-input]',target.closest('.pane')).click();break;
+ case 'upload-pdf':S.uploadFromSide=side;$('[data-pdf-input]',target.closest('.pane')).click();break;
  case 'toggle-pdf-colors':togglePdfColors();break;
  case 'fit-pdf':setPdfZoom(1);break;
  case 'prev-page':pdfChangePage(-1);break;case 'next-page':pdfChangePage(1);break;
